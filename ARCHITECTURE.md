@@ -153,37 +153,41 @@ MusicBox (Master Scene)
 ├── XRRig (Camera + Controllers)
 │   ├── LeftController (XR Input)
 │   └── RightController (XR Input)
+│   │
+│   └── UIContainer
+│       ├── NavigationUI (Status display, always visible)
+│       │   └── ModeText (TextMeshPro: "BROWSE ALBUMS" or "REVIEW PLAYLISTS")
+│       │
+│       ├── RolodexContainer (Shared rotation point for both rolodexes)
+│       │   ├── AlbumRolodex (lower height, visible in Browse mode)
+│       │   │   └── 9 tile instances
+│       │   │
+│       │   └── PlaylistRolodex (upper height, visible in Review mode)
+│       │       └── 6 tile instances
+│       │
+│       └── ListPanel (Visible in Review/Create modes when expanded)
+│           └── ListController instance
+│               └── 6 row instances
 │
-├── Managers (Keep across modes)
-│   ├── ModeController (Singleton)
-│   ├── NetworkManager (Singleton)
-│   ├── PlaylistManager (Singleton)
-│   ├── MQTTManager (Singleton)
-│   └── XRInputManager (Singleton)
-│
-└── UIContainer (Conditional visibility per mode)
-    ├── NavigationUI (Browse/Review toggle, always visible)
-    │   └── ModeButtons (visual indicator)
-    │
-    ├── BrowseUI (Hidden in Review/Create)
-    │   ├── AlbumRolodex
-    │   └── NowPlaying card
-    │
-    ├── ReviewUI (Hidden in Browse)
-    │   ├── PlaylistRolodex
-    │   └── TrackListPanel (toggled on selection)
-    │
-    └── CreateUI (Hidden until album selected)
-        ├── AlbumTrackList
-        ├── CurrentPlaylist card
-        └── Save/Cancel buttons
+└── Managers (Root level, persist across modes)
+    ├── ModeController (Singleton)
+    ├── NetworkManager (Singleton)
+    ├── PlaylistManager (Singleton)
+    ├── MQTTManager (Singleton)
+    └── XRInputManager (Singleton)
 ```
 
 **Why single scene?**
 - Eliminates scene load delays
-- Preserves singleton state
+- Preserves singleton state (managers stay in memory)
 - Simpler XR session management
 - Easier to debug mode switching
+- All UI stays relative to player head (child of XRRig)
+
+**Two-Mode Design:**
+- **Browse**: AlbumRolodex visible, PlaylistRolodex hidden, ListPanel hidden
+- **Review**: PlaylistRolodex visible, AlbumRolodex hidden, ListPanel expands on playlist select
+- **Create**: (embedded in Browse) ListPanel pops up with track-add mode
 
 ---
 
@@ -217,31 +221,44 @@ MusicBox (Master Scene)
 ```
 ┌─────────────────────────────────────────────────────┐
 │                   ModeController                     │
+│           (Toggled by Left Trigger)                  │
 └─────────────────────────────────────────────────────┘
 
-Browse (default)
-├─ Shows: AlbumRolodex, NowPlaying
-├─ Input: Joystick (scroll albums), A (select)
-└─ OnEnter: PlaylistRolodex hidden, AlbumRolodex visible
-    OnExit: None
+Browse (Default)
+├─ Shows: AlbumRolodex (lower), NavigationUI ("BROWSE ALBUMS")
+├─ Input: Joystick X (scroll albums), A (select album)
+│         Left Trigger (mode toggle)
+├─ OnEnter: 
+│   - AlbumRolodex visible
+│   - PlaylistRolodex hidden
+│   - ListPanel hidden
+│   - ModeText = "BROWSE ALBUMS"
+└─ OnExit: Close ListPanel if open (before mode switch)
 
-Review
-├─ Shows: PlaylistRolodex, (optional) TrackListPanel
-├─ Input: Joystick (scroll playlists/tracks), A (delete), B (close)
-└─ OnEnter: AlbumRolodex hidden, PlaylistRolodex visible, refresh playlists
-    OnExit: Close track list if open
-
-Create
-├─ Shows: AlbumTrackList, CurrentPlaylist card
-├─ Input: Joystick (scroll tracks), A (add), B (save/cancel)
-└─ OnEnter: Triggered by A-button in Browse on album selection
-    OnExit: Save playlist, return to Browse via B button
+Review (Toggled via Left Trigger)
+├─ Shows: PlaylistRolodex (upper), NavigationUI ("REVIEW PLAYLISTS")
+├─ Input: Joystick X (scroll playlists), A (select playlist)
+│         Left Trigger (mode toggle)
+│         Joystick Y + A/B (when ListPanel expanded)
+├─ OnEnter:
+│   - PlaylistRolodex visible
+│   - AlbumRolodex hidden
+│   - ListPanel hidden (expands on playlist select)
+│   - ModeText = "REVIEW PLAYLISTS"
+│   - Refresh playlists from PlaylistManager
+└─ OnExit: Close ListPanel if open, save any pending changes
 ```
 
+**Create Mode (Embedded in Browse):**
+- When album selected in Browse mode → ListPanel expands with TrackList (add-to-playlist)
+- B button to save and collapse ListPanel → return to Browse AlbumRolodex
+- Still in Browse mode, just ListPanel open
+
 **State Safety:**
-- Only one mode active at a time
-- Mode change clears previous mode UI
-- Input handler respects current mode before processing
+- Only Browse or Review active at a time
+- Mode switch via left trigger only (no accidental UI clicks)
+- ListPanel visibility independent of mode (can appear/disappear in either)
+- Input handler respects current mode and ListPanel visibility
 
 ---
 
@@ -284,13 +301,22 @@ Behavior:  When deleted, re-center selection on remaining tracks
 - Scroll limits calculated correctly: maxOffset = max(0, totalTracks - visibleRows)
 - Input blocking prevents album rotation
 
-### 4. NavigationUI (Always Visible)
+### 3. NavigationUI (Status Display, Always Visible)
 ```
-Displays:  Two buttons: "Browse Albums" | "Review Playlists"
-Highlight: Current mode highlighted
-Interact:  Left trigger to toggle (not clickable)
-Behavior:  Shows which mode you're in, no manual mode button needed
+Displays:  Current mode name only (TextMeshPro)
+           "BROWSE ALBUMS" (Browse mode)
+           "REVIEW PLAYLISTS" (Review mode)
+Updates:   When left trigger pressed
+Interact:  No clickable elements (read-only status)
+Behavior:  Shows which mode you're in for reference
+           Mode switching via left trigger only
 ```
+
+**Design Rationale:**
+- Purely informational, not interactive
+- Reduces UI complexity in VR
+- Left trigger is single input for mode switching
+- No accidental UI interactions
 
 ---
 
