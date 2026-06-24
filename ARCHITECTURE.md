@@ -92,55 +92,77 @@ AlbumRolodex: Populate when discovery complete
 PlaylsitRolodex: Populate when playlist load complete
 ```
 
-### 2. Browse Mode (Albums)
+### 2. Browse Mode → Create (Select tracks from album)
 ```
-User: Left Joystick (left/right)
+User: Joystick X (scroll albums), A button to select
   ↓
-XRInputManager: Detect input
+Album selected
   ↓
-RolodexController (Browse): Scroll album carousel
+ListPanel expands (bottom)
+  Shows: Album's tracklist (all tracks unselected)
   ↓
-User: A button
+User: A button on each track to select
+  Track highlights when selected (cumulative selection)
   ↓
-AlbumDataSource.OnSelected(index)
+User: B button when done selecting
   ↓
-Enter Create Mode
+PlaylistRolodex slides up (top)
+  Shows: [BLANK CARD] [Playlist 1] [Playlist 2] ...
+  Blank card centered by default
 ```
 
-### 3. Create Mode (Add tracks to playlist)
+### 3. Browse Mode → Create (Target playlist)
 ```
-User: Browse album tracks with joystick
+PlaylistRolodex visible with destination options
   ↓
-A button: Add track to current playlist (visual feedback)
+User: Joystick X to center desired playlist/blank
   ↓
-B button: Save playlist, return to Browse
+If BLANK CARD centered:
+  → Auto-generate playlist name (random bird name)
+  → A button creates new playlist with selected tracks
+  ↓
+If EXISTING PLAYLIST centered:
+  → A button adds selected tracks to existing playlist
+  ↓
+Playlist updated → scrolls down to show newly added tracks
+  ↓
+B button or track is complete
+  ↓
+PlaylistRolodex and ListPanel fade out
+  ↓
+Return to Browse mode (AlbumRolodex visible)
   ↓
 PlaylistManager.SavePlaylist()
   ↓
-MQTT: Publish "playlist.created" → Node-RED
+MQTT: Publish "playlist.created" or "playlist.modified" → Node-RED
 ```
 
-### 4. Review Mode (Edit playlists)
+### 4. Browse Mode → Review (Toggle mode)
 ```
 User: Left Trigger
   ↓
 ModeController: Toggle Browse → Review
   ↓
-PlaylistRolodex (Review): Show all playlists
+AlbumRolodex fades, PlaylistRolodex appears
   ↓
-User: A button → Select playlist
+PlaylistRolodex: Shows all playlists (no blank card in Review mode)
   ↓
-PlaylistTrackListController.Show(playlist)
+User: Joystick X (scroll playlists), A button to select
   ↓
-User: Up/Down arrows → Scroll tracks (center track highlighted)
+Playlist selected
   ↓
-User: A button → Delete selected track
+ListPanel expands (center)
+  Shows: Playlist's tracklist (for editing/deleting)
   ↓
-PlaylistManager.SavePlaylist()
+User: A button to delete selected track, B button to close
+  ↓
+PlaylistManager.SavePlaylist() after each deletion
   ↓
 MQTT: Publish "playlist.modified" → Node-RED
   ↓
-User: B button → Close track list, return to playlist carousel
+User: B button to close ListPanel, return to PlaylistRolodex
+  ↓
+User: Left Trigger to return to Browse mode
 ```
 
 ---
@@ -417,44 +439,67 @@ PlaylistManager:
 
 ## Implementation Phases
 
-### Phase 1: Foundation (Core + Browse)
-- [ ] XRRig + Input system
-- [ ] NetworkManager (UPnP discovery)
-- [ ] ModeController + NavigationUI
-- [ ] AlbumRolodex + album art loading
-- [ ] Test: Browse 512 albums, smooth 60 FPS
-- **GitHub:** Commit "Phase 1: Browse mode working"
+### Phase 1: Foundation (Core + Browse + Create)
+**Browse mode with integrated playlist creation**
 
-### Phase 2: Review (Playlists)
-- [ ] PlaylistManager (load/save JSON)
-- [ ] PlaylistRolodex (Review mode)
-- [ ] PlaylistTrackListController (track display)
+Core:
+- [ ] XRRig + Input system (left trigger, A/B buttons, joystick)
+- [ ] NetworkManager (UPnP discovery, album list)
+- [ ] PlaylistManager (load/save JSON, create new playlists)
+- [ ] ModeController + NavigationUI (status display)
+- [ ] XRInputManager (controller polling, input routing)
+
+Browse UI:
+- [ ] RolodexController (generic carousel)
+- [ ] AlbumDataSource (album art loading, caching)
+- [ ] ListController (generic track list)
+- [ ] TrackListDataSource (per-track selection, highlight)
+
+Create Flow (embedded in Browse):
+- [ ] PlaylistRolodex with blank card (first item)
+- [ ] Random bird name generator for new playlists
+- [ ] Playlist scroll-down on track add
+- [ ] Fade transitions (ListPanel + PlaylistRolodex)
+
+Tests:
+- [ ] Browse 512 albums, smooth 60 FPS
+- [ ] Select album, see tracks, select per-track
+- [ ] Target blank card, create new playlist
+- [ ] Target existing playlist, add to it
+- [ ] Verify new playlist saved and populated
+
+**GitHub:** Commit "Phase 1: Browse + Create working"
+
+### Phase 2: Review (Playlist Management)
+- [ ] PlaylistRolodex (Review mode, no blank card)
+- [ ] ListController in edit mode (delete tracks)
+- [ ] Input blocking (joystick Y blocked during list scroll)
+- [ ] Playlist scroll-down on track deletion
 - [ ] Track deletion with re-centering
-- [ ] Input blocking (playlist scroll blocked when track list open)
-- [ ] Test: Load playlists, scroll, delete tracks
-- **GitHub:** Commit "Phase 2: Review mode working"
 
-### Phase 3: Create (Playlist Builder)
-- [ ] CreateUI + CurrentPlaylist card
-- [ ] AlbumTrackList → Add to playlist
-- [ ] Playlist save + MQTT publish
-- [ ] Return to Browse after save
-- [ ] Test: Create playlist from multiple albums
-- **GitHub:** Commit "Phase 3: Create mode working"
+Tests:
+- [ ] Load playlists in Review mode
+- [ ] Select playlist, see tracks
+- [ ] Delete tracks, playlist updates
+- [ ] B button closes track list
 
-### Phase 4: Polish (MQTT, Optimization)
-- [ ] MQTT integration (publish all events)
-- [ ] Playback controller (send play/pause to server)
+**GitHub:** Commit "Phase 2: Review mode working"
+
+### Phase 3: Polish (MQTT, Optimization, Headset Testing)
+- [ ] MQTT integration (publish all playlist events)
+- [ ] Playback controller (send play/pause to renderer)
 - [ ] Error handling (network timeouts, file I/O)
-- [ ] Performance optimization (frame rate stability)
-- [ ] Test on headset (not just editor)
-- **GitHub:** Commit "Phase 4: Polish and MQTT ready"
+- [ ] Performance optimization (frame rate stability, memory profiling)
+- [ ] Test full flow on headset (Browse→Create→Review→Browse loop)
+- [ ] Validate audio playback integration
 
-### Phase 5: Deployment
+**GitHub:** Commit "Phase 3: Polish and MQTT ready"
+
+### Phase 4: Deployment
 - [ ] Build APK for Quest 3S
-- [ ] Test full flow on headset
+- [ ] Final headset testing
 - [ ] GitHub release v2.0.0
-- [ ] Document secrets.h setup
+- [ ] Document secrets.h setup and deployment instructions
 
 ---
 
