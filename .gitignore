@@ -1,0 +1,32 @@
+﻿# Unity
+Library/
+Temp/
+obj/
+Build/
+Builds/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.tmp
+*.user
+*.userprefs
+.vs/
+.vscode/
+
+# Build artifacts
+*.apk
+*.aab
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Secrets (never commit)
+Assets/Resources/secrets.h
+secrets.json
