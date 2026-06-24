@@ -27,32 +27,50 @@ MusicBox/
 │   ├── PlaylistManager         (JSON persistence, CRUD)
 │   └── AudioController         (Playback state, volume)
 │
-├── UI/
+├── UI/ (Generic Controllers + Data Sources)
 │   ├── ModeController          (Browse/Create/Review state machine)
-│   ├── RolodexController       (Album/Playlist carousel)
-│   ├── TrackListController     (Track display & deletion)
-│   └── CreatorController       (Playlist builder)
+│   ├── RolodexController       (Generic carousel: albums or playlists)
+│   ├── ListController          (Generic vertical list: tracks or items)
+│   └── NavigationUI            (Mode toggle buttons, always visible)
+│
+├── Data/
+│   ├── DataSources/
+│   │   ├── ITileDataSource     (Interface: carousel items)
+│   │   │   ├── AlbumDataSource
+│   │   │   └── PlaylistDataSource
+│   │   └── IListDataSource     (Interface: list items)
+│   │       ├── TrackListDataSource (read-only for browsing)
+│   │       └── EditableTrackListDataSource (deletable for review)
+│   └── Models/
+│       ├── Playlist            (name, tracks[])
+│       ├── Track               (title, artist, album, uri)
+│       └── Album               (title, artist, art, tracks[])
 │
 ├── Input/
 │   ├── XRInputManager          (Controller polling, mapping)
 │   └── InputRouter             (Distribute input by mode/focus)
 │
-├── Network/
-│   ├── MQTTManager             (Broker connection, publish/subscribe)
-│   ├── UPnPManager             (Device discovery, ContentDirectory queries)
-│   └── PlaybackController      (Send play/pause/next to renderer)
-│
-└── Data/
-    ├── Playlist                (Model: name, tracks[])
-    ├── Track                   (Model: title, artist, album, uri)
-    └── Album                   (Model: title, artist, art, tracks[])
+└── Network/
+    ├── MQTTManager             (Broker connection, publish/subscribe)
+    ├── UPnPManager             (Device discovery, ContentDirectory queries)
+    └── PlaybackController      (Send play/pause/next to renderer)
 ```
+
+**Key Design Pattern: Data Source Abstraction**
+
+Instead of separate `AlbumRolodex` + `PlaylistRolodex`, use:
+- **One `RolodexController`** that takes any `ITileDataSource`
+  - Same carousel logic, scrolling, positioning, highlighting
+  - Swaps data source (AlbumDataSource ↔ PlaylistDataSource)
+  - Same for ListController with IListDataSource implementations
 
 **Key Principle:** Managers are **singletons** with clear ownership:
 - NetworkManager owns all UPnP state
 - PlaylistManager owns all playlist state
 - MQTTManager owns all broker communication
 - ModeController owns all UI visibility/state
+- RolodexController is stateless (data from source)
+- ListController is stateless (data from source)
 
 ---
 
