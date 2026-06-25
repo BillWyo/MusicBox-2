@@ -11,8 +11,6 @@ public class XRInputManager : MonoBehaviour
     public event System.Action<Vector2> OnJoystickMoved;
 
     private bool _wasLeftTriggerPressed;
-    private bool _wasAButtonPressed;
-    private bool _wasBButtonPressed;
 
     void Awake()
     {
@@ -32,6 +30,24 @@ public class XRInputManager : MonoBehaviour
 
     void PollInputs()
     {
-        // Placeholder for input polling
+        #if UNITY_EDITOR
+        if (UnityEngine.InputSystem.Keyboard.current != null && UnityEngine.InputSystem.Keyboard.current.spaceKey.wasPressedThisFrame)
+        {
+            Debug.Log("Left trigger pressed (editor test)");
+            OnLeftTriggerPressed?.Invoke();
+        }
+        #endif
+
+        var leftController = InputDevices.GetDeviceAtXRNode(XRNode.LeftHand);
+        if (leftController.isValid && leftController.TryGetFeatureValue(CommonUsages.trigger, out float triggerValue))
+        {
+            bool isPressed = triggerValue > 0.5f;
+            if (isPressed && !_wasLeftTriggerPressed)
+            {
+                Debug.Log("Left trigger pressed");
+                OnLeftTriggerPressed?.Invoke();
+            }
+            _wasLeftTriggerPressed = isPressed;
+        }
     }
 }

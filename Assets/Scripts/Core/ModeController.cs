@@ -15,9 +15,28 @@ public class ModeController : MonoBehaviour
         else Instance = this;
     }
 
+    void Start()
+    {
+        if (XRInputManager.Instance != null)
+            XRInputManager.Instance.OnLeftTriggerPressed += ToggleMode;
+    }
+
+    void ToggleMode()
+    {
+        Mode newMode = CurrentMode == Mode.Browse ? Mode.Review : Mode.Browse;
+        SetMode(newMode);
+    }
+
     public void SetMode(Mode newMode)
     {
         CurrentMode = newMode;
+        Debug.Log($"Mode changed to: {newMode}");
         OnModeSelected?.Invoke(newMode);
+    }
+
+    void OnDestroy()
+    {
+        if (XRInputManager.Instance != null)
+            XRInputManager.Instance.OnLeftTriggerPressed -= ToggleMode;
     }
 }
