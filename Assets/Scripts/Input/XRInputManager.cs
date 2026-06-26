@@ -54,10 +54,6 @@ public class XRInputManager : MonoBehaviour
         Vector2 joystick = Vector2.zero;
         if (keyboard.aKey.isPressed) joystick.x = -1f;
         if (keyboard.dKey.isPressed) joystick.x = 1f;
-        if (joystick != Vector2.zero)
-        {
-            Debug.Log($"Joystick moved: {joystick}");
-        }
         OnJoystickMoved?.Invoke(joystick);
 
         if (keyboard.enterKey.wasPressedThisFrame)

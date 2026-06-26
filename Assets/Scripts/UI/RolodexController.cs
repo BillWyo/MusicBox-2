@@ -16,13 +16,9 @@ public class RolodexController : MonoBehaviour
 
     void Start()
     {
-        if (_dataSource != null)
+        if (_dataSource is AlbumDataSource albumSource)
         {
-            CreateTiles();
-            if (_dataSource is AlbumDataSource albumSource)
-            {
-                albumSource.OnDataChanged += RefreshTiles;
-            }
+            albumSource.OnDataChanged += RefreshTiles;
         }
 
         if (XRInputManager.Instance != null)
@@ -106,13 +102,7 @@ public class RolodexController : MonoBehaviour
 
     void OnJoystickMoved(Vector2 value)
     {
-        if (!gameObject.activeSelf)
-        {
-            Debug.Log($"OnJoystickMoved called but carousel inactive");
-            return;
-        }
-
-        Debug.Log($"OnJoystickMoved: {value}, active={gameObject.activeSelf}");
+        if (!gameObject.activeSelf) return;
 
         int count = _dataSource.Count;
         if (count == 0) return;
