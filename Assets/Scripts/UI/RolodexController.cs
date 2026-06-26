@@ -3,7 +3,7 @@ using TMPro;
 
 public class RolodexController : MonoBehaviour
 {
-    [SerializeField] private ITileDataSource _dataSource;
+    [SerializeField] private AlbumDataSource _dataSource;
     [SerializeField] private int _visibleTiles = 9;
     [SerializeField] private float _radius = 3f;
     [SerializeField] private float _angleStep = 15f;
@@ -36,6 +36,7 @@ public class RolodexController : MonoBehaviour
     {
         _tiles = new GameObject[_visibleTiles];
         int count = _dataSource.Count;
+        if (count == 0) return;
 
         for (int i = 0; i < _visibleTiles; i++)
         {
@@ -66,6 +67,7 @@ public class RolodexController : MonoBehaviour
 
     void UpdateTilePosition(int visibleIndex)
     {
+        if (_dataSource.Count == 0 || _tiles == null || _tiles[visibleIndex] == null) return;
         int dataIndex = (_offset + visibleIndex) % _dataSource.Count;
         int centerIndex = _visibleTiles / 2;
 
@@ -92,7 +94,7 @@ public class RolodexController : MonoBehaviour
 
     void RefreshTiles()
     {
-        if (_tiles == null) CreateTiles();
+        if (_tiles == null || _dataSource.Count == 0) CreateTiles();
         else
         {
             for (int i = 0; i < _visibleTiles; i++)
@@ -104,7 +106,13 @@ public class RolodexController : MonoBehaviour
 
     void OnJoystickMoved(Vector2 value)
     {
-        if (!gameObject.activeSelf) return;
+        if (!gameObject.activeSelf)
+        {
+            Debug.Log($"OnJoystickMoved called but carousel inactive");
+            return;
+        }
+
+        Debug.Log($"OnJoystickMoved: {value}, active={gameObject.activeSelf}");
 
         int count = _dataSource.Count;
         if (count == 0) return;

@@ -51,24 +51,16 @@ public class XRInputManager : MonoBehaviour
             OnLeftTriggerPressed?.Invoke();
         }
 
-        if (keyboard.leftArrowKey.isPressed || keyboard.rightArrowKey.isPressed)
+        Vector2 joystick = Vector2.zero;
+        if (keyboard.aKey.isPressed) joystick.x = -1f;
+        if (keyboard.dKey.isPressed) joystick.x = 1f;
+        if (joystick != Vector2.zero)
         {
-            Vector2 joystick = Vector2.zero;
-            if (keyboard.leftArrowKey.isPressed) joystick.x = -1f;
-            if (keyboard.rightArrowKey.isPressed) joystick.x = 1f;
-            if (joystick != _lastJoystickValue)
-            {
-                OnJoystickMoved?.Invoke(joystick);
-                _lastJoystickValue = joystick;
-            }
+            Debug.Log($"Joystick moved: {joystick}");
         }
-        else if (_lastJoystickValue != Vector2.zero)
-        {
-            OnJoystickMoved?.Invoke(Vector2.zero);
-            _lastJoystickValue = Vector2.zero;
-        }
+        OnJoystickMoved?.Invoke(joystick);
 
-        if (keyboard.returnKey.wasPressedThisFrame)
+        if (keyboard.enterKey.wasPressedThisFrame)
         {
             Debug.Log("A button pressed (editor test)");
             OnAButtonPressed?.Invoke();

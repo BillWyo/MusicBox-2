@@ -9,6 +9,12 @@ public class ModeController : MonoBehaviour
 
     public event System.Action<Mode> OnModeSelected;
 
+    [SerializeField] private GameObject _albumRolodex;
+    [SerializeField] private GameObject _playlistRolodex;
+    [SerializeField] private GameObject _listPanel;
+
+    private bool _subscribed;
+
     void Awake()
     {
         if (Instance != null) Destroy(gameObject);
@@ -17,8 +23,21 @@ public class ModeController : MonoBehaviour
 
     void Start()
     {
-        if (XRInputManager.Instance != null)
-            XRInputManager.Instance.OnLeftTriggerPressed += ToggleMode;
+        UpdateUIVisibility(CurrentMode);
+        TrySubscribe();
+    }
+
+    void Update()
+    {
+        if (!_subscribed) TrySubscribe();
+    }
+
+    void TrySubscribe()
+    {
+        if (_subscribed || XRInputManager.Instance == null) return;
+        XRInputManager.Instance.OnLeftTriggerPressed += ToggleMode;
+        _subscribed = true;
+        Debug.Log("ModeController subscribed to XRInputManager");
     }
 
     void ToggleMode()
@@ -31,7 +50,20 @@ public class ModeController : MonoBehaviour
     {
         CurrentMode = newMode;
         Debug.Log($"Mode changed to: {newMode}");
+        UpdateUIVisibility(newMode);
         OnModeSelected?.Invoke(newMode);
+    }
+
+    void UpdateUIVisibility(Mode mode)
+    {
+        if (_albumRolodex != null)
+            _albumRolodex.SetActive(mode == Mode.Browse);
+
+        if (_playlistRolodex != null)
+            _playlistRolodex.SetActive(mode == Mode.Review);
+
+        if (_listPanel != null)
+            _listPanel.SetActive(false);
     }
 
     void OnDestroy()
