@@ -18,10 +18,3 @@ public class NetworkManager : MonoBehaviour
         Debug.Log("NetworkManager initialized");
     }
 }
-
-public class Album
-{
-    public string Title { get; set; }
-    public string Artist { get; set; }
-    public string ArtUrl { get; set; }
-}

@@ -18,15 +18,3 @@ public class PlaylistManager : MonoBehaviour
         Debug.Log("PlaylistManager initialized");
     }
 }
-
-public class Playlist
-{
-    public string Name { get; set; }
-    public List<Track> Tracks { get; set; } = new List<Track>();
-}
-
-public class Track
-{
-    public string Title { get; set; }
-    public string Artist { get; set; }
-}
