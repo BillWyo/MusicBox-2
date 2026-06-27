@@ -93,6 +93,16 @@ public class NavigationUI : MonoBehaviour
 
     void UpdateDisplay(ModeController.Mode mode, int currentIndex, int total)
     {
+        if (_modeText == null)
+        {
+            _modeText = GetComponent<TextMeshPro>();
+            if (_modeText == null)
+            {
+                Debug.LogWarning("NavigationUI: TextMeshPro component not found");
+                return;
+            }
+        }
+
         string modeText = mode == ModeController.Mode.Browse ? "BROWSE ALBUMS" : "REVIEW PLAYLISTS";
         string itemType = mode == ModeController.Mode.Browse ? "Album" : "Playlist";
 
