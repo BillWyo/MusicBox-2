@@ -462,19 +462,31 @@ Feedback:  Track count updates, re-center selection on remaining tracks
 
 ### 3. NavigationUI (Status Display, Always Visible)
 ```
-Displays:  Current mode name only (TextMeshPro)
-           "BROWSE ALBUMS" (Browse mode)
-           "REVIEW PLAYLISTS" (Review mode)
-Updates:   When left trigger pressed
+Displays:  Mode name + current selection position
+           Browse mode:   "BROWSE ALBUMS | Album 5 of 512"
+           Review mode:   "REVIEW PLAYLISTS | Playlist 2 of 5"
+           
+           Format: "{Mode} | {Item} {index} of {total}"
+           
+Updates:   - When left trigger pressed (mode change)
+           - When carousel selection changes (index change)
+           
 Interact:  No clickable elements (read-only status)
-Behavior:  Shows which mode you're in for reference
-           Mode switching via left trigger only
+
+Behavior:  Shows which mode you're in + current position
+           Provides visual feedback during carousel scrolling
 ```
+
+**Data Sources:**
+- Mode: ModeController.CurrentMode
+- Index: RolodexController.CurrentIndex (new event)
+- Total: RolodexController.DataSource.Count
 
 **Design Rationale:**
 - Purely informational, not interactive
 - Reduces UI complexity in VR
-- Left trigger is single input for mode switching
+- Position display aids navigation in large collections
+- Real-time feedback during scrolling
 - No accidental UI interactions
 
 ---

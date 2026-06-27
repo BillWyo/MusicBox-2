@@ -10,11 +10,24 @@ public class RolodexController : MonoBehaviour
     [SerializeField] private float _tileHeight = 0f;
 
     public event System.Action<int> OnItemSelected;
+    public event System.Action<int, int> OnIndexChanged; // (currentIndex, totalCount)
 
     private int _offset;
     private GameObject[] _tiles;
 
     private ITileDataSource DataSource => _dataSource as ITileDataSource;
+
+    public ITileDataSource PublicDataSource => DataSource;
+
+    public int CurrentIndex
+    {
+        get
+        {
+            if (DataSource == null || DataSource.Count == 0) return 0;
+            int centerIndex = _visibleTiles / 2;
+            return (_offset + centerIndex) % DataSource.Count;
+        }
+    }
 
     void Start()
     {
@@ -108,6 +121,7 @@ public class RolodexController : MonoBehaviour
                 UpdateTilePosition(i);
             }
         }
+        OnIndexChanged?.Invoke(CurrentIndex, DataSource.Count);
     }
 
     void OnJoystickMoved(Vector2 value)
@@ -126,6 +140,7 @@ public class RolodexController : MonoBehaviour
         {
             _offset = (_offset + direction + count) % count;
             RefreshTiles();
+            OnIndexChanged?.Invoke(CurrentIndex, count);
         }
     }
 
