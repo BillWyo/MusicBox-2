@@ -11,6 +11,19 @@ public class ListController : MonoBehaviour
 
     public event System.Action<int> OnItemSelected;
 
+    public void SetDataSource(TrackListDataSource dataSource)
+    {
+        _dataSource = dataSource;
+        if (_items != null)
+        {
+            foreach (var item in _items)
+            {
+                if (item != null) Destroy(item);
+            }
+            _items = null;
+        }
+    }
+
     private int _offset;
     private GameObject[] _items;
     private bool _subscribed;

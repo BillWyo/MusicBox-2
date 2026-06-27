@@ -56,7 +56,8 @@ public class ModeController : MonoBehaviour
 
             GameObject albumDataSourceObj = new GameObject("AlbumDataSource");
             albumDataSourceObj.transform.SetParent(uiContainer.transform);
-            albumDataSourceObj.AddComponent<AlbumDataSource>();
+            AlbumDataSource albumDataSource = albumDataSourceObj.AddComponent<AlbumDataSource>();
+            _albumRolodexController.SetDataSource(albumDataSource);
         }
 
         // Create PlaylistRolodex if missing
@@ -68,7 +69,8 @@ public class ModeController : MonoBehaviour
 
             GameObject playlistDataSourceObj = new GameObject("PlaylistDataSource");
             playlistDataSourceObj.transform.SetParent(uiContainer.transform);
-            playlistDataSourceObj.AddComponent<PlaylistDataSource>();
+            PlaylistDataSource playlistDataSource = playlistDataSourceObj.AddComponent<PlaylistDataSource>();
+            _playlistRolodexController.SetDataSource(playlistDataSource);
         }
 
         // Create ListPanel if missing
@@ -81,6 +83,7 @@ public class ModeController : MonoBehaviour
             GameObject trackDataSourceObj = new GameObject("TrackListDataSource");
             trackDataSourceObj.transform.SetParent(uiContainer.transform);
             _trackListDataSource = trackDataSourceObj.AddComponent<TrackListDataSource>();
+            _listController.SetDataSource(_trackListDataSource);
         }
 
         // Create NavigationUI if missing

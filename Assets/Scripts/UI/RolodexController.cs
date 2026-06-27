@@ -19,6 +19,19 @@ public class RolodexController : MonoBehaviour
 
     public ITileDataSource PublicDataSource => DataSource;
 
+    public void SetDataSource(MonoBehaviour dataSource)
+    {
+        _dataSource = dataSource;
+        if (_tiles != null)
+        {
+            foreach (var tile in _tiles)
+            {
+                if (tile != null) Destroy(tile);
+            }
+            _tiles = null;
+        }
+    }
+
     public int CurrentIndex
     {
         get
