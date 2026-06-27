@@ -26,6 +26,7 @@ public class ListController : MonoBehaviour
         {
             XRInputManager.Instance.OnJoystickMoved += OnJoystickMoved;
             XRInputManager.Instance.OnAButtonPressed += OnAButtonPressed;
+            _subscribed = true;
             Debug.Log("ListController subscribed to XRInputManager");
         }
         else
