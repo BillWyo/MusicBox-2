@@ -343,14 +343,14 @@ Return to Review: PlaylistRolodex (front)
 | Left Joystick X (left) | A | Scroll carousel/list left |
 | Left Joystick X (right) | D | Scroll carousel/list right |
 | Left X button | ? | Save (playlist, changes) |
-| Left Y button | ? | (Reserved for future) |
+| Left Y button | ? | Album Context Menu (sort, filter) |
 | Right Trigger | Enter | Select album/playlist/track |
 | Right Joystick Y (up) | W | Scroll track list up |
 | Right Joystick Y (down) | S | Scroll track list down |
 | Right A button | ? | Back / Close panel |
-| Right B button | Backspace | (Reserved for future) |
+| Right B button | ? | Playlist Context Menu (delete, reorder) |
 
-**TODO:** Assign keyboard keys for Left X, Right A, Y button
+**TODO:** Assign keyboard keys for Left X, Right A, Left Y, Right B buttons
 
 ---
 
@@ -397,6 +397,60 @@ Review (Toggled via Left Trigger)
 - Mode switch via left trigger only (no accidental UI clicks)
 - ListPanel visibility independent of mode (can appear/disappear in either)
 - Input handler respects current mode and ListPanel visibility
+
+---
+
+## Context Menus
+
+**Album Context Menu (Left Y Button)**
+
+Triggered in Browse mode to access sorting and filtering options.
+
+```
+Position:  Centered on screen
+Display:   Vertical list overlay, center item highlighted
+Scroll:    Right Joystick Y (up/down)
+Select:    Right Trigger to execute option
+Close:     Right B button or timeout (auto-close after selection)
+```
+
+**Menu Options:**
+- Sort by Album Name (default, ✓ indicator)
+- Sort by Artist Name
+- (Reserved for: Genre, Year, Recently Added, etc.)
+
+**Behavior:**
+- Opens over current view without disrupting carousel
+- Center-selected option highlighted
+- Selection applies sort immediately, playlist refreshes
+- Menu closes after selection or button press
+
+---
+
+**Playlist Context Menu (Right B Button)**
+
+Triggered in Review or Create mode to manage playlist operations.
+
+```
+Position:  Upper-left of PlaylistRolodex card
+           (Anchored to visible card, not screen-centered)
+Display:   Vertical list overlay, center item highlighted
+Scroll:    Right Joystick Y (up/down)
+Select:    Right Trigger to execute option
+Close:     Right B button or timeout (auto-close after selection)
+```
+
+**Menu Options:**
+- Delete All Tracks (confirm prompt)
+- Reorder Tracks (?)
+- (Reserved for: Rename, Export, Duplicate, etc.)
+
+**Behavior:**
+- Opens near PlaylistRolodex to show contextual relationship
+- Center-selected option highlighted
+- Destructive actions (Delete All) prompt for confirmation
+- Menu closes after selection or button press
+- Changes saved immediately to PlaylistManager
 
 ---
 
