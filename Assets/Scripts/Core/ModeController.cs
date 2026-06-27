@@ -27,6 +27,7 @@ public class ModeController : MonoBehaviour
 
     void Start()
     {
+        EnsureUIHierarchyExists();
         UpdateUIVisibility(CurrentMode);
         TrySubscribe();
     }
@@ -34,6 +35,63 @@ public class ModeController : MonoBehaviour
     void Update()
     {
         if (!_subscribed) TrySubscribe();
+    }
+
+    void EnsureUIHierarchyExists()
+    {
+        // Find or create UIContainer
+        GameObject uiContainer = GameObject.Find("UIContainer");
+        if (uiContainer == null)
+        {
+            uiContainer = new GameObject("UIContainer");
+        }
+
+        // Create AlbumRolodex if missing
+        if (_albumRolodex == null)
+        {
+            _albumRolodex = new GameObject("AlbumRolodex");
+            _albumRolodex.transform.SetParent(uiContainer.transform);
+            _albumRolodexController = _albumRolodex.AddComponent<RolodexController>();
+
+            GameObject albumDataSourceObj = new GameObject("AlbumDataSource");
+            albumDataSourceObj.transform.SetParent(uiContainer.transform);
+            albumDataSourceObj.AddComponent<AlbumDataSource>();
+        }
+
+        // Create PlaylistRolodex if missing
+        if (_playlistRolodex == null)
+        {
+            _playlistRolodex = new GameObject("PlaylistRolodex");
+            _playlistRolodex.transform.SetParent(uiContainer.transform);
+            _playlistRolodexController = _playlistRolodex.AddComponent<RolodexController>();
+
+            GameObject playlistDataSourceObj = new GameObject("PlaylistDataSource");
+            playlistDataSourceObj.transform.SetParent(uiContainer.transform);
+            playlistDataSourceObj.AddComponent<PlaylistDataSource>();
+        }
+
+        // Create ListPanel if missing
+        if (_listPanel == null)
+        {
+            _listPanel = new GameObject("ListPanel");
+            _listPanel.transform.SetParent(uiContainer.transform);
+            _listController = _listPanel.AddComponent<ListController>();
+
+            GameObject trackDataSourceObj = new GameObject("TrackListDataSource");
+            trackDataSourceObj.transform.SetParent(uiContainer.transform);
+            _trackListDataSource = trackDataSourceObj.AddComponent<TrackListDataSource>();
+        }
+
+        // Create NavigationUI if missing
+        if (GameObject.Find("NavigationUI") == null)
+        {
+            GameObject navObj = new GameObject("NavigationUI");
+            navObj.transform.SetParent(uiContainer.transform);
+            navObj.AddComponent<TextMeshPro>();
+            navObj.AddComponent<NavigationUI>();
+        }
+
+        Debug.Log("UI hierarchy ensured");
     }
 
     void TrySubscribe()
