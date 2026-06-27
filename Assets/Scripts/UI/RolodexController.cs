@@ -3,7 +3,7 @@ using TMPro;
 
 public class RolodexController : MonoBehaviour
 {
-    [SerializeField] private AlbumDataSource _dataSource;
+    [SerializeField] private MonoBehaviour _dataSource;
     [SerializeField] private int _visibleTiles = 9;
     [SerializeField] private float _radius = 3f;
     [SerializeField] private float _angleStep = 15f;
@@ -14,11 +14,21 @@ public class RolodexController : MonoBehaviour
     private int _offset;
     private GameObject[] _tiles;
 
+    private ITileDataSource DataSource => _dataSource as ITileDataSource;
+
     void Start()
     {
         if (_dataSource is AlbumDataSource albumSource)
         {
             albumSource.OnDataChanged += RefreshTiles;
+        }
+        else if (_dataSource is PlaylistDataSource playlistSource)
+        {
+            playlistSource.OnDataChanged += RefreshTiles;
+        }
+        else if (_dataSource is TrackListDataSource trackSource)
+        {
+            trackSource.OnDataChanged += RefreshTiles;
         }
 
         if (XRInputManager.Instance != null)
@@ -31,7 +41,7 @@ public class RolodexController : MonoBehaviour
     void CreateTiles()
     {
         _tiles = new GameObject[_visibleTiles];
-        int count = _dataSource.Count;
+        int count = DataSource.Count;
         if (count == 0) return;
 
         for (int i = 0; i < _visibleTiles; i++)
@@ -52,8 +62,8 @@ public class RolodexController : MonoBehaviour
             textObj.transform.localPosition = Vector3.zero;
 
             TextMeshPro textMesh = textObj.AddComponent<TextMeshPro>();
-            textMesh.text = _dataSource.GetTitle((i + _offset) % count);
-            textMesh.fontSize = 36;
+            textMesh.text = DataSource.GetTitle((i + _offset) % count);
+            textMesh.fontSize = 4;
             textMesh.alignment = TextAlignmentOptions.Center;
 
             _tiles[i] = tile;
@@ -63,8 +73,8 @@ public class RolodexController : MonoBehaviour
 
     void UpdateTilePosition(int visibleIndex)
     {
-        if (_dataSource.Count == 0 || _tiles == null || _tiles[visibleIndex] == null) return;
-        int dataIndex = (_offset + visibleIndex) % _dataSource.Count;
+        if (DataSource.Count == 0 || _tiles == null || _tiles[visibleIndex] == null) return;
+        int dataIndex = (_offset + visibleIndex) % DataSource.Count;
         int centerIndex = _visibleTiles / 2;
 
         float angle = (visibleIndex - centerIndex) * _angleStep * Mathf.Deg2Rad;
@@ -77,8 +87,8 @@ public class RolodexController : MonoBehaviour
         TextMeshPro textMesh = _tiles[visibleIndex].GetComponentInChildren<TextMeshPro>();
         if (textMesh != null)
         {
-            string title = _dataSource.GetTitle(dataIndex);
-            string subtitle = _dataSource.GetSubtitle(dataIndex);
+            string title = DataSource.GetTitle(dataIndex);
+            string subtitle = DataSource.GetSubtitle(dataIndex);
             textMesh.text = $"{title}\n{subtitle}";
 
             if (visibleIndex == centerIndex)
@@ -90,7 +100,7 @@ public class RolodexController : MonoBehaviour
 
     void RefreshTiles()
     {
-        if (_tiles == null || _dataSource.Count == 0) CreateTiles();
+        if (_tiles == null || DataSource.Count == 0) CreateTiles();
         else
         {
             for (int i = 0; i < _visibleTiles; i++)
@@ -103,8 +113,9 @@ public class RolodexController : MonoBehaviour
     void OnJoystickMoved(Vector2 value)
     {
         if (!gameObject.activeSelf) return;
+        if (DataSource == null) return;
 
-        int count = _dataSource.Count;
+        int count = DataSource.Count;
         if (count == 0) return;
 
         int direction = 0;
@@ -121,9 +132,10 @@ public class RolodexController : MonoBehaviour
     void OnAButtonPressed()
     {
         if (!gameObject.activeSelf) return;
+        if (DataSource == null || DataSource.Count == 0) return;
 
         int centerIndex = _visibleTiles / 2;
-        int selectedIndex = (_offset + centerIndex) % _dataSource.Count;
+        int selectedIndex = (_offset + centerIndex) % DataSource.Count;
         OnItemSelected?.Invoke(selectedIndex);
     }
 
@@ -161,6 +173,14 @@ public class RolodexController : MonoBehaviour
         if (_dataSource is AlbumDataSource albumSource)
         {
             albumSource.OnDataChanged -= RefreshTiles;
+        }
+        else if (_dataSource is PlaylistDataSource playlistSource)
+        {
+            playlistSource.OnDataChanged -= RefreshTiles;
+        }
+        else if (_dataSource is TrackListDataSource trackSource)
+        {
+            trackSource.OnDataChanged -= RefreshTiles;
         }
     }
 }
