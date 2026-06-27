@@ -94,17 +94,17 @@ PlaylsitRolodex: Populate when playlist load complete
 
 ### 2. Browse Mode → Create (Select tracks from album)
 ```
-User: Joystick X (scroll albums), A button to select
+User: Left Joystick X (scroll albums), Right Trigger to select
   ↓
 Album selected
   ↓
 ListPanel expands (bottom)
   Shows: Album's tracklist (all tracks unselected)
   ↓
-User: A button on each track to select
+User: Right Joystick Y to scroll, Right Trigger on each track to select
   Track highlights when selected (cumulative selection)
   ↓
-User: B button when done selecting
+User: Left A button when done selecting
   ↓
 PlaylistRolodex slides up (top)
   Shows: [BLANK CARD] [Playlist 1] [Playlist 2] ...
@@ -115,18 +115,18 @@ PlaylistRolodex slides up (top)
 ```
 PlaylistRolodex visible with destination options
   ↓
-User: Joystick X to center desired playlist/blank
+User: Left Joystick X to center desired playlist/blank
   ↓
 If BLANK CARD centered:
   → Auto-generate playlist name (random bird name)
-  → A button creates new playlist with selected tracks
+  → Right Trigger creates new playlist with selected tracks
   ↓
 If EXISTING PLAYLIST centered:
-  → A button adds selected tracks to existing playlist
+  → Right Trigger adds selected tracks to existing playlist
   ↓
 Playlist updated → scrolls down to show newly added tracks
   ↓
-B button or track is complete
+Left X button to save or Left A to close
   ↓
 PlaylistRolodex and ListPanel fade out
   ↓
@@ -147,20 +147,22 @@ AlbumRolodex fades, PlaylistRolodex appears
   ↓
 PlaylistRolodex: Shows all playlists (no blank card in Review mode)
   ↓
-User: Joystick X (scroll playlists), A button to select
+User: Left Joystick X (scroll playlists), Right Trigger to select
   ↓
 Playlist selected
   ↓
 ListPanel expands (center)
   Shows: Playlist's tracklist (for editing/deleting)
   ↓
-User: A button to delete selected track, B button to close
+User: Right Joystick Y (scroll tracks), Right Trigger to delete selected track
+  ↓
+Left X button to save changes, Left A button to close ListPanel
   ↓
 PlaylistManager.SavePlaylist() after each deletion
   ↓
 MQTT: Publish "playlist.modified" → Node-RED
   ↓
-User: B button to close ListPanel, return to PlaylistRolodex
+Return to PlaylistRolodex
   ↓
 User: Left Trigger to return to Browse mode
 ```
@@ -220,21 +222,21 @@ MusicBox (Master Scene)
 |-------|--------|------|
 | Trigger | Toggle Browse ↔ Review | All |
 | Joystick X | Scroll carousel left/right | Browse/Review/Create |
-| Joystick Y | Scroll track list up/down | Review (track list open) |
-| A button | Select item | Browse/Create/Review |
-| B button | Close panel / Return | Create/Review |
+| X button | Save (playlist, changes) | Create/Review |
+| A button | Back / Close panel | Create/Review |
 
 ### Right Controller
 | Input | Action | Mode |
 |-------|--------|------|
-| A button | Delete selected track | Review (track list open) |
-| B button | Close track list / Return | Review (track list open) |
+| Trigger | Select item (album/playlist/track) | Browse/Create/Review |
+| Joystick Y | Scroll track list up/down | Review/Create (list open) |
 
 **Key Design:**
-- **Left trigger is mode toggle** (proven working in v1)
-- **A button is always select** (freed from mode switching conflicts)
-- **B button is always back** (consistent navigation)
-- **Joystick scrolling has mode guards** to prevent cross-UI interference
+- **Left trigger for mode toggle** (proven working in v1, natural pointing gesture)
+- **Right trigger for selection** (natural point-and-shoot gesture, avoids A-button conflicts)
+- **Joystick isolation** (left=horizontal carousel, right=vertical track list) minimizes spurious signals
+- **Explicit Save/Back** (left X and A buttons, clear intentionality)
+- **Right joystick utilized** for track list scrolling (vertical separation from carousel)
 
 ---
 
@@ -248,7 +250,7 @@ MusicBox (Master Scene)
 
 Browse (Default)
 ├─ Shows: AlbumRolodex (lower), NavigationUI ("BROWSE ALBUMS")
-├─ Input: Joystick X (scroll albums), A (select album)
+├─ Input: Left Joystick X (scroll albums), Right Trigger (select album)
 │         Left Trigger (mode toggle)
 ├─ OnEnter: 
 │   - AlbumRolodex visible
@@ -259,9 +261,9 @@ Browse (Default)
 
 Review (Toggled via Left Trigger)
 ├─ Shows: PlaylistRolodex (upper), NavigationUI ("REVIEW PLAYLISTS")
-├─ Input: Joystick X (scroll playlists), A (select playlist)
+├─ Input: Left Joystick X (scroll playlists), Right Trigger (select playlist)
 │         Left Trigger (mode toggle)
-│         Joystick Y + A/B (when ListPanel expanded)
+│         Right Joystick Y + Right Trigger (when ListPanel expanded)
 ├─ OnEnter:
 │   - PlaylistRolodex visible
 │   - AlbumRolodex hidden
@@ -289,9 +291,9 @@ Review (Toggled via Left Trigger)
 ### 1. AlbumRolodex (Browse Mode)
 ```
 Displays:  9 visible tiles in arc (center = selected)
-Scroll:    Left joystick X-axis
-Interaction: A button to select
-Behavior:  Animate selected album to sides when A pressed
+Scroll:    Left Joystick X-axis
+Interaction: Right Trigger to select
+Behavior:  Animate selected album to sides when Right Trigger pressed
 Load:      Album art from network (cached locally)
 ```
 
@@ -300,21 +302,22 @@ Load:      Album art from network (cached locally)
 ### 2. PlaylistRolodex (Review Mode)
 ```
 Displays:  6 visible tiles in arc (center = selected)
-Scroll:    Left joystick X-axis (blocked when TrackList open)
-Interaction: A button to select
-Behavior:  Show track list when A pressed
-Load:      Trigger PlaylisTrackListController.Show()
+Scroll:    Left Joystick X-axis (blocked when TrackList open)
+Interaction: Right Trigger to select
+Behavior:  Show track list when Right Trigger pressed
+Load:      Trigger ListController.Show()
 ```
 
 **v1 Fix Applied:** Input blocking prevents playlist rotation while viewing tracks
 
-### 3. PlaylistTrackListController (Review Mode - Track List)
+### 3. ListController (Track List - Browse/Review/Create)
 ```
 Displays:  6 visible rows (center row = selected/highlighted)
-Scroll:    Left joystick Y-axis (up/down)
+Scroll:    Right Joystick Y-axis (up/down)
 Selection: Center row is always selected
 Display:   Track# | Title | Artist/Album (multi-source playlists)
-Interact:  A = delete, B = close
+Interact:  Right Trigger = select/delete, Left A = close
+Save:      Left X button saves changes
 Behavior:  When deleted, re-center selection on remaining tracks
 ```
 
