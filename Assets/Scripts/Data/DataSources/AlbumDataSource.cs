@@ -12,7 +12,16 @@ public class AlbumDataSource : MonoBehaviour, ITileDataSource
     void Start()
     {
         if (NetworkManager.Instance != null)
+        {
+            // Query current data (in case event already fired)
+            _albums = NetworkManager.Instance.GetAllAlbums();
+            if (_albums.Count > 0)
+            {
+                OnDataChanged?.Invoke();
+            }
+            // Still subscribe for future changes
             NetworkManager.Instance.OnAlbumsLoaded += OnAlbumsLoaded;
+        }
     }
 
     void OnAlbumsLoaded(List<Album> albums)

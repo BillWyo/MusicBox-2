@@ -12,7 +12,16 @@ public class PlaylistDataSource : MonoBehaviour, ITileDataSource
     void Start()
     {
         if (PlaylistManager.Instance != null)
+        {
+            // Query current data (in case event already fired)
+            _playlists = PlaylistManager.Instance.GetAllPlaylists();
+            if (_playlists.Count > 0)
+            {
+                OnDataChanged?.Invoke();
+            }
+            // Still subscribe for future changes
             PlaylistManager.Instance.OnPlaylistsLoaded += OnPlaylistsLoaded;
+        }
     }
 
     void OnPlaylistsLoaded(List<Playlist> playlists)
