@@ -1,5 +1,6 @@
 using UnityEngine;
 using TMPro;
+using UnityEngine.InputSystem;
 #if UNITY_EDITOR
 using UnityEditor.SceneManagement;
 #endif
@@ -41,7 +42,7 @@ public class ModeController : MonoBehaviour
         if (!_subscribed) TrySubscribe();
 
         // Temporary: Press 'S' to save scene with current hierarchy
-        if (Input.GetKeyDown(KeyCode.S))
+        if (Keyboard.current != null && Keyboard.current.sKey.wasPressedThisFrame)
         {
             SaveSceneWithHierarchy();
         }
