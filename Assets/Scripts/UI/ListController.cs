@@ -13,6 +13,7 @@ public class ListController : MonoBehaviour
 
     private int _offset;
     private GameObject[] _items;
+    private bool _subscribed;
 
     void Start()
     {
@@ -25,6 +26,22 @@ public class ListController : MonoBehaviour
         {
             XRInputManager.Instance.OnJoystickMoved += OnJoystickMoved;
             XRInputManager.Instance.OnAButtonPressed += OnAButtonPressed;
+            Debug.Log("ListController subscribed to XRInputManager");
+        }
+        else
+        {
+            Debug.LogError("ListController: XRInputManager.Instance is null!");
+        }
+    }
+
+    void Update()
+    {
+        if (XRInputManager.Instance != null && !_subscribed)
+        {
+            XRInputManager.Instance.OnJoystickMoved += OnJoystickMoved;
+            XRInputManager.Instance.OnAButtonPressed += OnAButtonPressed;
+            _subscribed = true;
+            Debug.Log("ListController retried subscription in Update()");
         }
     }
 
