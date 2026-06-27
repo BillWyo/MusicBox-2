@@ -92,77 +92,82 @@ AlbumRolodex: Populate when discovery complete
 PlaylsitRolodex: Populate when playlist load complete
 ```
 
-### 2. Browse Mode → Create (Select tracks from album)
+### 2. Browse Mode → Create (Album Selection & Track Selection)
 ```
 User: Left Joystick X (scroll albums), Right Trigger to select
   ↓
 Album selected
   ↓
-ListPanel expands (bottom)
-  Shows: Album's tracklist (all tracks unselected)
+AlbumRolodex + PlaylistRolodex fade to background
   ↓
-User: Right Joystick Y to scroll, Right Trigger on each track to select
-  Track highlights when selected (cumulative selection)
+Layout: Side-by-side cards appear front/center
+  ┌─────────────────────┐  ┌──────────────────┐
+  │   ListPanel (left)  │  │ Playlist Card    │
+  │  Album's tracks:    │  │ (right - target) │
+  │  ☐ Track 1          │  │ Blank or Exist   │
+  │  ☐ Track 2          │  │ Tracks added: 0  │
+  │  ☐ Track 3          │  │                  │
+  └─────────────────────┘  └──────────────────┘
   ↓
-User: Left A button when done selecting
+User: Right Joystick Y (scroll tracks), Right Trigger to select each track
+  → Track highlights in ListPanel
+  → Selected tracks accumulate in Playlist Card (real-time feedback)
+  → Counter updates: "Tracks added: 2"
   ↓
-PlaylistRolodex slides up (top)
-  Shows: [BLANK CARD] [Playlist 1] [Playlist 2] ...
-  Blank card centered by default
+When done selecting tracks:
+  → User can scroll PlaylistRolodex with Left Joystick X to pick target
+  → Blank Card centered = create new playlist
+  → Existing Playlist centered = append to that playlist
+  ↓
+Left X button (Save) to commit:
+  → PlaylistManager.SavePlaylist() (new or updated)
+  → MQTT: Publish "playlist.created" or "playlist.modified"
+  → Both cards fade out
+  ↓
+Right A button (Back) to cancel:
+  → Discard selected tracks
+  → Both cards fade out
+  ↓
+Return to Browse mode: AlbumRolodex + PlaylistRolodex come forward
 ```
 
-### 3. Browse Mode → Create (Target playlist)
-```
-PlaylistRolodex visible with destination options
-  ↓
-User: Left Joystick X to center desired playlist/blank
-  ↓
-If BLANK CARD centered:
-  → Auto-generate playlist name (random bird name)
-  → Right Trigger creates new playlist with selected tracks
-  ↓
-If EXISTING PLAYLIST centered:
-  → Right Trigger adds selected tracks to existing playlist
-  ↓
-Playlist updated → scrolls down to show newly added tracks
-  ↓
-Left X button to save or Left A to close
-  ↓
-PlaylistRolodex and ListPanel fade out
-  ↓
-Return to Browse mode (AlbumRolodex visible)
-  ↓
-PlaylistManager.SavePlaylist()
-  ↓
-MQTT: Publish "playlist.created" or "playlist.modified" → Node-RED
-```
-
-### 4. Browse Mode → Review (Toggle mode)
+### 3. Browse Mode → Review (Toggle mode)
 ```
 User: Left Trigger
   ↓
 ModeController: Toggle Browse → Review
   ↓
-AlbumRolodex fades, PlaylistRolodex appears
+AlbumRolodex + PlaylistRolodex fade/move to background
   ↓
-PlaylistRolodex: Shows all playlists (no blank card in Review mode)
+PlaylistRolodex comes forward (focused)
+  Shows: [BLANK CARD] [Playlist 1] [Playlist 2] ...
+  Note: Blank card present for creating new playlists in Review mode
   ↓
 User: Left Joystick X (scroll playlists), Right Trigger to select
   ↓
 Playlist selected
   ↓
-ListPanel expands (center)
-  Shows: Playlist's tracklist (for editing/deleting)
+PlaylistRolodex fades to background
+  ↓
+ListPanel (track edit card) comes forward (centered)
+  Shows: Playlist's tracklist (with delete capability)
+  ┌────────────────────────┐
+  │  "My Playlist"         │
+  │  ☑ Track 1 (deletable) │
+  │  ☑ Track 2 (deletable) │
+  │  ☑ Track 3 (deletable) │
+  └────────────────────────┘
   ↓
 User: Right Joystick Y (scroll tracks), Right Trigger to delete selected track
+  → Track removed from playlist
+  → PlaylistManager.SavePlaylist() immediately
+  → MQTT: Publish "playlist.modified"
   ↓
-Left X button to save changes, Left A button to close ListPanel
+Left X button to save (confirm changes), Right A button to close ListPanel
   ↓
-PlaylistManager.SavePlaylist() after each deletion
+ListPanel fades out
   ↓
-MQTT: Publish "playlist.modified" → Node-RED
-  ↓
-Return to PlaylistRolodex
+PlaylistRolodex comes forward (Review state)
   ↓
 User: Left Trigger to return to Browse mode
 ```
@@ -215,6 +220,98 @@ MusicBox (Master Scene)
 
 ---
 
+## UI Layering & Focus Management
+
+**Layering Strategy:** Depth-based focus (Z-position + Alpha fade)
+
+**Browse Mode (Default State):**
+```
+Front (Focused):  AlbumRolodex (opaque, interactive)
+                  PlaylistRolodex (behind, semi-transparent)
+Back (Hidden):    ListPanel (inactive)
+```
+
+**Browse → Album Selected (Track Selection):**
+```
+Front (Focused):  ┌─────────────┐  ┌──────────────┐
+                  │ ListPanel   │  │ Playlist     │
+                  │ (left)      │  │ Card (right) │
+                  │ Tracks      │  │ Real-time    │
+                  └─────────────┘  │ feedback     │
+                                   └──────────────┘
+Back (Faded):     AlbumRolodex + PlaylistRolodex (50% alpha)
+```
+
+**Browse → Album Selected → Playlist Selection:**
+```
+Front (Focused):  PlaylistRolodex (carousel, pick target)
+                  ↓ (Left Joystick X to scroll)
+                  ├─ Blank Card centered = create new
+                  └─ Existing Playlist centered = append
+Back (Faded):     ListPanel + AlbumRolodex (25% alpha)
+```
+
+**Browse → Album Selected → Save/Cancel:**
+```
+Action:           Left X (Save) or Right A (Back)
+                  ↓
+                  Both cards fade out (alpha → 0)
+                  ListPanel + PlaylistRolodex + AlbumRolodex return to front
+                  ↓
+Return to Browse: AlbumRolodex (front), PlaylistRolodex (back)
+```
+
+**Review Mode (Default State):**
+```
+Front (Focused):  PlaylistRolodex (opaque, interactive)
+                  AlbumRolodex (hidden)
+Back (Hidden):    ListPanel (inactive)
+```
+
+**Review → Playlist Selected (Track Edit):**
+```
+Front (Focused):  ListPanel (track list, centered)
+Back (Faded):     PlaylistRolodex (50% alpha, visible for context)
+```
+
+**Review → Playlist Selected → Save/Cancel:**
+```
+Action:           Left X (Save) or Right A (Back)
+                  ↓
+                  ListPanel fades out
+                  ↓
+Return to Review: PlaylistRolodex (front)
+```
+
+**Key Principles:**
+1. **Only one card "front/focused" at a time** (opaque, interactive)
+2. **Rolodexes fade to background when cards appear** (prevents input interference)
+3. **Alpha transitions smooth the focus shift** (visual clarity, natural UX)
+4. **Z-position keeps focus order consistent** (prevents accidentally clicking behind)
+5. **Side-by-side layout (Create mode)** provides real-time feedback without modal dialog
+
+---
+
+## Playlist Concept
+
+**Blank Card (Create New):**
+- Always appears as first card in PlaylistRolodex
+- In Browse mode: available for creating new playlists during track selection
+- In Review mode: available for creating new playlists on-the-fly
+- Display: `[+ NEW PLAYLIST]` or similar
+- When centered + Right Trigger: auto-generate name (random bird name), create with selected tracks
+
+**Existing Playlists:**
+- Appear as carousel tiles after blank card
+- In Browse: can append selected tracks to any existing playlist
+- In Review: can view/edit existing playlist (delete tracks, rename)
+
+**Logic:**
+- If blank card centered when Right Trigger pressed → **Create mode**
+- If existing playlist centered when Right Trigger pressed → **Append/Edit mode**
+
+---
+
 ## Input Mapping (Quest 3S Touch Plus)
 
 ### Left Controller
@@ -237,6 +334,23 @@ MusicBox (Master Scene)
 - **Joystick isolation** (left=horizontal carousel, right=vertical track list) minimizes spurious signals
 - **Explicit Save/Back** (left X and A buttons, clear intentionality)
 - **Right joystick utilized** for track list scrolling (vertical separation from carousel)
+
+### Editor Keyboard Equivalents
+
+| Quest 3S | Editor Key | Action |
+|----------|-----------|--------|
+| Left Trigger | Spacebar | Toggle Browse ↔ Review |
+| Left Joystick X (left) | A | Scroll carousel/list left |
+| Left Joystick X (right) | D | Scroll carousel/list right |
+| Left X button | ? | Save (playlist, changes) |
+| Left Y button | ? | (Reserved for future) |
+| Right Trigger | Enter | Select album/playlist/track |
+| Right Joystick Y (up) | W | Scroll track list up |
+| Right Joystick Y (down) | S | Scroll track list down |
+| Right A button | ? | Back / Close panel |
+| Right B button | Backspace | (Reserved for future) |
+
+**TODO:** Assign keyboard keys for Left X, Right A, Y button
 
 ---
 
@@ -310,21 +424,41 @@ Load:      Trigger ListController.Show()
 
 **v1 Fix Applied:** Input blocking prevents playlist rotation while viewing tracks
 
-### 3. ListController (Track List - Browse/Review/Create)
+### 3. ListController (Track Selection & Track List)
+
+**In Create Mode (Browse → Album Selected):**
 ```
+Position:  Left side of screen (side-by-side with Playlist Card)
 Displays:  6 visible rows (center row = selected/highlighted)
 Scroll:    Right Joystick Y-axis (up/down)
-Selection: Center row is always selected
-Display:   Track# | Title | Artist/Album (multi-source playlists)
-Interact:  Right Trigger = select/delete, Left A = close
-Save:      Left X button saves changes
-Behavior:  When deleted, re-center selection on remaining tracks
+Selection: Center row always selected
+Display:   Checkbox | Title | Artist
+Interact:  Right Trigger = toggle track selection
+Behavior:  Selected tracks accumulate, highlight in different color
+Feedback:  Playlist Card on right updates in real-time with count
 ```
+
+**In Review Mode (Playlist Selected):**
+```
+Position:  Center of screen
+Displays:  6 visible rows (center row = selected/highlighted)
+Scroll:    Right Joystick Y-axis (up/down)
+Selection: Center row always selected
+Display:   Track# | Title | Artist
+Interact:  Right Trigger = delete selected track
+Behavior:  Track removed immediately, PlaylistManager saves
+Feedback:  Track count updates, re-center selection on remaining tracks
+```
+
+**Shared Controls:**
+- Left X button: Save (Create: commit playlist, Review: confirm deletions)
+- Right A button: Back/Close panel
+- Input blocking prevents carousel rotation when list active
 
 **v1 Fix Applied:**
 - Artist display for multi-album playlists
 - Scroll limits calculated correctly: maxOffset = max(0, totalTracks - visibleRows)
-- Input blocking prevents album rotation
+- Input blocking prevents album rotation and carousel interference
 
 ### 3. NavigationUI (Status Display, Always Visible)
 ```
