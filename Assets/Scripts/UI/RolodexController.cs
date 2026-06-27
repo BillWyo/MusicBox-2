@@ -46,7 +46,8 @@ public class RolodexController : MonoBehaviour
 
         if (XRInputManager.Instance != null)
         {
-            XRInputManager.Instance.OnJoystickMoved += OnJoystickMoved;
+            XRInputManager.Instance.OnJoystickTap += OnJoystickTap;
+            XRInputManager.Instance.OnJoystickHold += OnJoystickHold;
             XRInputManager.Instance.OnAButtonPressed += OnAButtonPressed;
         }
     }
@@ -124,7 +125,7 @@ public class RolodexController : MonoBehaviour
         OnIndexChanged?.Invoke(CurrentIndex, DataSource.Count);
     }
 
-    void OnJoystickMoved(Vector2 value)
+    void OnJoystickTap(int direction)
     {
         if (!gameObject.activeSelf) return;
         if (DataSource == null) return;
@@ -132,16 +133,25 @@ public class RolodexController : MonoBehaviour
         int count = DataSource.Count;
         if (count == 0) return;
 
-        int direction = 0;
-        if (value.x < -0.5f) direction = -1;
-        else if (value.x > 0.5f) direction = 1;
+        // Single step advance/back on tap
+        _offset = (_offset + direction + count) % count;
+        RefreshTiles();
+        OnIndexChanged?.Invoke(CurrentIndex, count);
+    }
 
-        if (direction != 0)
-        {
-            _offset = (_offset + direction + count) % count;
-            RefreshTiles();
-            OnIndexChanged?.Invoke(CurrentIndex, count);
-        }
+    void OnJoystickHold(int direction)
+    {
+        if (!gameObject.activeSelf) return;
+        if (DataSource == null) return;
+
+        int count = DataSource.Count;
+        if (count == 0) return;
+
+        // Rapid scroll on hold: advance 3 items per hold event
+        int rapidAdvance = direction * 3;
+        _offset = (_offset + rapidAdvance + count * 10) % count;
+        RefreshTiles();
+        OnIndexChanged?.Invoke(CurrentIndex, count);
     }
 
     void OnAButtonPressed()
@@ -181,7 +191,8 @@ public class RolodexController : MonoBehaviour
     {
         if (XRInputManager.Instance != null)
         {
-            XRInputManager.Instance.OnJoystickMoved -= OnJoystickMoved;
+            XRInputManager.Instance.OnJoystickTap -= OnJoystickTap;
+            XRInputManager.Instance.OnJoystickHold -= OnJoystickHold;
             XRInputManager.Instance.OnAButtonPressed -= OnAButtonPressed;
         }
 
