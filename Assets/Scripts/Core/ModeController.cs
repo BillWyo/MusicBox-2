@@ -1,5 +1,8 @@
 using UnityEngine;
 using TMPro;
+#if UNITY_EDITOR
+using UnityEditor.SceneManagement;
+#endif
 
 public class ModeController : MonoBehaviour
 {
@@ -36,6 +39,20 @@ public class ModeController : MonoBehaviour
     void Update()
     {
         if (!_subscribed) TrySubscribe();
+
+        // Temporary: Press 'S' to save scene with current hierarchy
+        if (Input.GetKeyDown(KeyCode.S))
+        {
+            SaveSceneWithHierarchy();
+        }
+    }
+
+    void SaveSceneWithHierarchy()
+    {
+        #if UNITY_EDITOR
+        UnityEditor.SceneManagement.EditorSceneManager.SaveScene(gameObject.scene);
+        Debug.Log("Scene saved with current hierarchy");
+        #endif
     }
 
     void EnsureUIHierarchyExists()
