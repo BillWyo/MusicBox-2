@@ -11,6 +11,38 @@ public class ListController : MonoBehaviour
 
     public event System.Action<int> OnItemSelected;
 
+    // Command interface
+    public void ScrollUp()
+    {
+        if (!gameObject.activeSelf || _dataSource == null || _dataSource.Count == 0) return;
+        int count = _dataSource.Count;
+        _offset = (_offset - 1 + count) % count;
+        RefreshItems();
+    }
+
+    public void ScrollDown()
+    {
+        if (!gameObject.activeSelf || _dataSource == null || _dataSource.Count == 0) return;
+        int count = _dataSource.Count;
+        _offset = (_offset + 1) % count;
+        RefreshItems();
+    }
+
+    public void SelectCenter()
+    {
+        if (!gameObject.activeSelf || _dataSource == null || _dataSource.Count == 0) return;
+        int centerIndex = _visibleItems / 2;
+        int selectedIndex = (_offset + centerIndex) % _dataSource.Count;
+        OnItemSelected?.Invoke(selectedIndex);
+    }
+
+    public int GetSelectedIndex()
+    {
+        if (_dataSource == null || _dataSource.Count == 0) return -1;
+        int centerIndex = _visibleItems / 2;
+        return (_offset + centerIndex) % _dataSource.Count;
+    }
+
     public void SetDataSource(TrackListDataSource dataSource)
     {
         _dataSource = dataSource;
