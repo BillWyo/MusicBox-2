@@ -58,36 +58,12 @@ public class ListController : MonoBehaviour
 
     private int _offset;
     private GameObject[] _items;
-    private bool _subscribed;
 
     void Start()
     {
         if (_dataSource != null)
         {
             _dataSource.OnDataChanged += RefreshItems;
-        }
-
-        if (XRInputManager.Instance != null)
-        {
-            XRInputManager.Instance.OnJoystickMoved += OnJoystickMoved;
-            XRInputManager.Instance.OnAButtonPressed += OnAButtonPressed;
-            _subscribed = true;
-            Debug.Log("ListController subscribed to XRInputManager");
-        }
-        else
-        {
-            Debug.LogError("ListController: XRInputManager.Instance is null!");
-        }
-    }
-
-    void Update()
-    {
-        if (XRInputManager.Instance != null && !_subscribed)
-        {
-            XRInputManager.Instance.OnJoystickMoved += OnJoystickMoved;
-            XRInputManager.Instance.OnAButtonPressed += OnAButtonPressed;
-            _subscribed = true;
-            Debug.Log("ListController retried subscription in Update()");
         }
     }
 
@@ -166,38 +142,6 @@ public class ListController : MonoBehaviour
         }
     }
 
-    void OnJoystickMoved(Vector2 value)
-    {
-        if (!gameObject.activeSelf) return;
-        if (_dataSource == null)
-        {
-            Debug.LogError("ListController._dataSource is null");
-            return;
-        }
-
-        int count = _dataSource.Count;
-        if (count == 0) return;
-
-        int direction = 0;
-        if (value.y < -0.5f) direction = 1;
-        else if (value.y > 0.5f) direction = -1;
-
-        if (direction != 0)
-        {
-            _offset = (_offset + direction + count) % count;
-            RefreshItems();
-        }
-    }
-
-    void OnAButtonPressed()
-    {
-        if (!gameObject.activeSelf) return;
-        if (_dataSource.Count == 0) return;
-
-        int centerIndex = _visibleItems / 2;
-        int selectedIndex = (_offset + centerIndex) % _dataSource.Count;
-        OnItemSelected?.Invoke(selectedIndex);
-    }
 
     Mesh CreateQuadMesh()
     {
@@ -224,12 +168,6 @@ public class ListController : MonoBehaviour
 
     void OnDestroy()
     {
-        if (XRInputManager.Instance != null)
-        {
-            XRInputManager.Instance.OnJoystickMoved -= OnJoystickMoved;
-            XRInputManager.Instance.OnAButtonPressed -= OnAButtonPressed;
-        }
-
         if (_dataSource != null)
         {
             _dataSource.OnDataChanged -= RefreshItems;
