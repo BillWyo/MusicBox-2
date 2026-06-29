@@ -61,7 +61,7 @@ public class RolodexController : MonoBehaviour
         {
             XRInputManager.Instance.OnJoystickTap += OnJoystickTap;
             XRInputManager.Instance.OnJoystickHold += OnJoystickHold;
-            XRInputManager.Instance.OnAButtonPressed += OnAButtonPressed;
+            XRInputManager.Instance.OnRightTriggerPressed += OnSelectPressed;
         }
     }
 
@@ -167,7 +167,7 @@ public class RolodexController : MonoBehaviour
         OnIndexChanged?.Invoke(CurrentIndex, count);
     }
 
-    void OnAButtonPressed()
+    void OnSelectPressed()
     {
         if (!gameObject.activeSelf) return;
         if (DataSource == null || DataSource.Count == 0) return;
@@ -206,7 +206,7 @@ public class RolodexController : MonoBehaviour
         {
             XRInputManager.Instance.OnJoystickTap -= OnJoystickTap;
             XRInputManager.Instance.OnJoystickHold -= OnJoystickHold;
-            XRInputManager.Instance.OnAButtonPressed -= OnAButtonPressed;
+            XRInputManager.Instance.OnRightTriggerPressed -= OnSelectPressed;
         }
 
         if (_dataSource is AlbumDataSource albumSource)

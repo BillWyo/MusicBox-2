@@ -10,7 +10,7 @@ public class ListInputHandler : MonoBehaviour
         if (XRInputManager.Instance != null)
         {
             XRInputManager.Instance.OnJoystickMoved += OnJoystickMoved;
-            XRInputManager.Instance.OnAButtonPressed += OnAButtonPressed;
+            XRInputManager.Instance.OnRightTriggerPressed += OnSelectPressed;
             _subscribed = true;
             Debug.Log("ListInputHandler subscribed to XRInputManager");
         }
@@ -25,7 +25,7 @@ public class ListInputHandler : MonoBehaviour
         if (XRInputManager.Instance != null && !_subscribed)
         {
             XRInputManager.Instance.OnJoystickMoved += OnJoystickMoved;
-            XRInputManager.Instance.OnAButtonPressed += OnAButtonPressed;
+            XRInputManager.Instance.OnRightTriggerPressed += OnSelectPressed;
             _subscribed = true;
             Debug.Log("ListInputHandler retried subscription in Update()");
         }
@@ -41,7 +41,7 @@ public class ListInputHandler : MonoBehaviour
             _listController.ScrollUp();
     }
 
-    void OnAButtonPressed()
+    void OnSelectPressed()
     {
         if (!gameObject.activeSelf || _listController == null) return;
         _listController.SelectCenter();
@@ -52,7 +52,7 @@ public class ListInputHandler : MonoBehaviour
         if (XRInputManager.Instance != null)
         {
             XRInputManager.Instance.OnJoystickMoved -= OnJoystickMoved;
-            XRInputManager.Instance.OnAButtonPressed -= OnAButtonPressed;
+            XRInputManager.Instance.OnRightTriggerPressed -= OnSelectPressed;
         }
     }
 }
