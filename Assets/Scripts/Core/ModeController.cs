@@ -127,11 +127,13 @@ public class ModeController : MonoBehaviour
 
         if (_albumRolodexController != null)
         {
+            _albumRolodexController.SetActiveMode(Mode.Browse);
             _albumRolodexController.OnItemSelected += OnAlbumSelected;
         }
 
         if (_playlistRolodexController != null)
         {
+            _playlistRolodexController.SetActiveMode(Mode.Review);
             _playlistRolodexController.OnItemSelected += OnPlaylistSelected;
             Debug.Log("ModeController subscribed to PlaylistRolodexController");
         }
@@ -205,20 +207,19 @@ public class ModeController : MonoBehaviour
 
     void UpdateUIVisibility(Mode mode)
     {
-        bool showAlbumCarousel = (mode == Mode.Browse && !_isCreating);
-        bool showPlaylistCarousel = (mode == Mode.Review && !_isEditing);
+        bool showCarousels = !_isCreating && !_isEditing;
         bool showListPanel = _isCreating || _isEditing;
 
         if (_albumRolodex != null)
-            _albumRolodex.SetActive(showAlbumCarousel);
+            _albumRolodex.SetActive(showCarousels);
 
         if (_playlistRolodex != null)
-            _playlistRolodex.SetActive(showPlaylistCarousel);
+            _playlistRolodex.SetActive(showCarousels);
 
         if (_listPanel != null)
             _listPanel.SetActive(showListPanel);
 
-        Debug.Log($"UI visibility updated for mode: {mode}, creating: {_isCreating}, editing: {_isEditing}");
+        Debug.Log($"UI visibility updated for mode: {mode}, carousels: {showCarousels}, panels: {showListPanel}");
     }
 
     void OnPlaylistSelected(int playlistIndex)

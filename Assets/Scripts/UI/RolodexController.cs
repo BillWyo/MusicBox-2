@@ -8,6 +8,7 @@ public class RolodexController : MonoBehaviour
     [SerializeField] private float _radius = 3f;
     [SerializeField] private float _angleStep = 15f;
     [SerializeField] private float _tileHeight = 0f;
+    [SerializeField] private ModeController.Mode _activeInMode = ModeController.Mode.Browse;
 
     public event System.Action<int> OnItemSelected;
     public event System.Action<int, int> OnIndexChanged; // (currentIndex, totalCount)
@@ -18,6 +19,11 @@ public class RolodexController : MonoBehaviour
     private ITileDataSource DataSource => _dataSource as ITileDataSource;
 
     public ITileDataSource PublicDataSource => DataSource;
+
+    public void SetActiveMode(ModeController.Mode mode)
+    {
+        _activeInMode = mode;
+    }
 
     public void SetDataSource(MonoBehaviour dataSource)
     {
@@ -143,7 +149,7 @@ public class RolodexController : MonoBehaviour
 
     void OnJoystickTap(int direction)
     {
-        if (!gameObject.activeSelf) return;
+        if (!gameObject.activeSelf || ModeController.Instance.CurrentMode != _activeInMode) return;
         if (DataSource == null) return;
 
         int count = DataSource.Count;
@@ -157,7 +163,7 @@ public class RolodexController : MonoBehaviour
 
     void OnJoystickHold(int direction)
     {
-        if (!gameObject.activeSelf) return;
+        if (!gameObject.activeSelf || ModeController.Instance.CurrentMode != _activeInMode) return;
         if (DataSource == null) return;
 
         int count = DataSource.Count;
