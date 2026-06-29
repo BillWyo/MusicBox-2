@@ -3,54 +3,56 @@ using TMPro;
 
 public class ListController : MonoBehaviour
 {
-    [SerializeField] private TrackListDataSource _dataSource;
+    [SerializeField] private MonoBehaviour _dataSource;
     [SerializeField] private int _visibleItems = 6;
     [SerializeField] private float _itemHeight = 0.5f;
     [SerializeField] private float _itemWidth = 2f;
     [SerializeField] private float _listDistance = 5f;
+
+    private IListDataSource DataSource => _dataSource as IListDataSource;
 
     public event System.Action<int> OnItemSelected;
 
     // Command interface
     public void ScrollUp()
     {
-        if (!gameObject.activeSelf || _dataSource == null || _dataSource.Count == 0) return;
-        int count = _dataSource.Count;
+        if (!gameObject.activeSelf || _dataSource == null || DataSource.Count == 0) return;
+        int count = DataSource.Count;
         _offset = (_offset - 1 + count) % count;
         RefreshItems();
     }
 
     public void ScrollDown()
     {
-        if (!gameObject.activeSelf || _dataSource == null || _dataSource.Count == 0) return;
-        int count = _dataSource.Count;
+        if (!gameObject.activeSelf || _dataSource == null || DataSource.Count == 0) return;
+        int count = DataSource.Count;
         _offset = (_offset + 1) % count;
         RefreshItems();
     }
 
     public void SelectCenter()
     {
-        if (!gameObject.activeSelf || _dataSource == null || _dataSource.Count == 0) return;
+        if (!gameObject.activeSelf || _dataSource == null || DataSource.Count == 0) return;
         int centerIndex = _visibleItems / 2;
-        int selectedIndex = (_offset + centerIndex) % _dataSource.Count;
+        int selectedIndex = (_offset + centerIndex) % DataSource.Count;
         OnItemSelected?.Invoke(selectedIndex);
     }
 
     public int GetSelectedIndex()
     {
-        if (_dataSource == null || _dataSource.Count == 0) return -1;
+        if (_dataSource == null || DataSource.Count == 0) return -1;
         int centerIndex = _visibleItems / 2;
-        return (_offset + centerIndex) % _dataSource.Count;
+        return (_offset + centerIndex) % DataSource.Count;
     }
 
-    public void SetDataSource(TrackListDataSource dataSource)
+    public void SetDataSource(MonoBehaviour dataSource)
     {
         if (_dataSource != null)
-            _dataSource.OnDataChanged -= RefreshItems;
+            DataSource.OnDataChanged -= RefreshItems;
 
         _dataSource = dataSource;
         if (_dataSource != null)
-            _dataSource.OnDataChanged += RefreshItems;
+            DataSource.OnDataChanged += RefreshItems;
 
         if (_items != null)
         {
@@ -72,9 +74,9 @@ public class ListController : MonoBehaviour
 
         if (_dataSource != null)
         {
-            _dataSource.OnDataChanged += RefreshItems;
+            DataSource.OnDataChanged += RefreshItems;
             Debug.Log("ListController subscribed to OnDataChanged");
-            if (_items == null && _dataSource.Count > 0)
+            if (_items == null && DataSource.Count > 0)
                 RefreshItems();
         }
         else
@@ -86,7 +88,7 @@ public class ListController : MonoBehaviour
     void CreateItems()
     {
         _items = new GameObject[_visibleItems];
-        int count = _dataSource.Count;
+        int count = DataSource.Count;
         if (count == 0) return;
 
         for (int i = 0; i < _visibleItems; i++)
@@ -107,7 +109,7 @@ public class ListController : MonoBehaviour
             textObj.transform.localPosition = new Vector3(0, 0, 0.6f);
 
             TextMeshPro textMesh = textObj.AddComponent<TextMeshPro>();
-            textMesh.text = _dataSource.GetTitle((i + _offset) % count);
+            textMesh.text = DataSource.GetTitle((i + _offset) % count);
             textMesh.fontSize = 18;
             textMesh.alignment = TextAlignmentOptions.Center;
 
@@ -118,8 +120,8 @@ public class ListController : MonoBehaviour
 
     void UpdateItemPosition(int visibleIndex)
     {
-        if (_dataSource.Count == 0 || _items == null || _items[visibleIndex] == null) return;
-        int dataIndex = (_offset + visibleIndex) % _dataSource.Count;
+        if (DataSource.Count == 0 || _items == null || _items[visibleIndex] == null) return;
+        int dataIndex = (_offset + visibleIndex) % DataSource.Count;
         int centerIndex = _visibleItems / 2;
 
         float yOffset = (centerIndex - visibleIndex) * _itemHeight;
@@ -135,7 +137,7 @@ public class ListController : MonoBehaviour
         TextMeshPro textMesh = _items[visibleIndex].GetComponentInChildren<TextMeshPro>();
         if (textMesh != null)
         {
-            string title = _dataSource.GetTitle(dataIndex);
+            string title = DataSource.GetTitle(dataIndex);
             textMesh.text = title;
 
             if (visibleIndex == centerIndex)
@@ -147,8 +149,8 @@ public class ListController : MonoBehaviour
 
     void RefreshItems()
     {
-        Debug.Log($"ListController.RefreshItems called, _items={_items == null}, count={_dataSource.Count}");
-        if (_items == null || _dataSource.Count == 0) CreateItems();
+        Debug.Log($"ListController.RefreshItems called, _items={_items == null}, count={DataSource.Count}");
+        if (_items == null || DataSource.Count == 0) CreateItems();
         else
         {
             for (int i = 0; i < _visibleItems; i++)
@@ -185,6 +187,6 @@ public class ListController : MonoBehaviour
     void OnDestroy()
     {
         if (_dataSource != null)
-            _dataSource.OnDataChanged -= RefreshItems;
+            DataSource.OnDataChanged -= RefreshItems;
     }
 }

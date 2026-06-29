@@ -1,7 +1,7 @@
 using UnityEngine;
 using System.Collections.Generic;
 
-public class TrackListDataSource : MonoBehaviour, ITileDataSource
+public class TrackListDataSource : MonoBehaviour, IListDataSource
 {
     private List<Track> _tracks = new List<Track>();
 
