@@ -45,7 +45,13 @@ public class ListController : MonoBehaviour
 
     public void SetDataSource(TrackListDataSource dataSource)
     {
+        if (_dataSource != null)
+            _dataSource.OnDataChanged -= RefreshItems;
+
         _dataSource = dataSource;
+        if (_dataSource != null)
+            _dataSource.OnDataChanged += RefreshItems;
+
         if (_items != null)
         {
             foreach (var item in _items)
@@ -61,9 +67,19 @@ public class ListController : MonoBehaviour
 
     void Start()
     {
+        if (_dataSource != null && _visibleItems == 0)
+            _visibleItems = 6;
+
         if (_dataSource != null)
         {
             _dataSource.OnDataChanged += RefreshItems;
+            Debug.Log("ListController subscribed to OnDataChanged");
+            if (_items == null && _dataSource.Count > 0)
+                RefreshItems();
+        }
+        else
+        {
+            Debug.LogError("ListController: _dataSource is null in Start()!");
         }
     }
 
@@ -169,8 +185,6 @@ public class ListController : MonoBehaviour
     void OnDestroy()
     {
         if (_dataSource != null)
-        {
             _dataSource.OnDataChanged -= RefreshItems;
-        }
     }
 }
