@@ -63,6 +63,9 @@ public class RolodexController : MonoBehaviour
             XRInputManager.Instance.OnJoystickHold += OnJoystickHold;
             XRInputManager.Instance.OnRightTriggerPressed += OnSelectPressed;
         }
+
+        if (_tiles == null && DataSource != null && DataSource.Count > 0)
+            RefreshTiles();
     }
 
     void CreateTiles()
