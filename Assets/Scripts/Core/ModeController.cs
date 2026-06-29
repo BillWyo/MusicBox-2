@@ -23,6 +23,8 @@ public class ModeController : MonoBehaviour
     [SerializeField] private TrackListDataSource _trackListDataSource;
 
     private bool _subscribed;
+    private bool _isCreating;
+    private bool _isEditing;
 
     void Awake()
     {
@@ -120,6 +122,7 @@ public class ModeController : MonoBehaviour
     {
         if (_subscribed || XRInputManager.Instance == null) return;
         XRInputManager.Instance.OnLeftTriggerPressed += ToggleMode;
+        XRInputManager.Instance.OnBackPressed += ExitPanel;
         _subscribed = true;
 
         if (_albumRolodexController != null)
@@ -181,6 +184,9 @@ public class ModeController : MonoBehaviour
         {
             Debug.LogError("_listPanel is null");
         }
+
+        _isCreating = true;
+        UpdateUIVisibility(CurrentMode);
     }
 
     void ToggleMode()
@@ -199,16 +205,20 @@ public class ModeController : MonoBehaviour
 
     void UpdateUIVisibility(Mode mode)
     {
+        bool showAlbumCarousel = (mode == Mode.Browse && !_isCreating);
+        bool showPlaylistCarousel = (mode == Mode.Review && !_isEditing);
+        bool showListPanel = _isCreating || _isEditing;
+
         if (_albumRolodex != null)
-            _albumRolodex.SetActive(mode == Mode.Browse);
+            _albumRolodex.SetActive(showAlbumCarousel);
 
         if (_playlistRolodex != null)
-            _playlistRolodex.SetActive(mode == Mode.Review);
+            _playlistRolodex.SetActive(showPlaylistCarousel);
 
         if (_listPanel != null)
-            _listPanel.SetActive(false);
+            _listPanel.SetActive(showListPanel);
 
-        Debug.Log($"UI visibility updated for mode: {mode}");
+        Debug.Log($"UI visibility updated for mode: {mode}, creating: {_isCreating}, editing: {_isEditing}");
     }
 
     void OnPlaylistSelected(int playlistIndex)
@@ -248,12 +258,26 @@ public class ModeController : MonoBehaviour
         {
             Debug.LogError("_listPanel is null");
         }
+
+        _isEditing = true;
+        UpdateUIVisibility(CurrentMode);
+    }
+
+    public void ExitPanel()
+    {
+        _isCreating = false;
+        _isEditing = false;
+        UpdateUIVisibility(CurrentMode);
+        Debug.Log("Exited Create/Edit mode");
     }
 
     void OnDestroy()
     {
         if (XRInputManager.Instance != null)
+        {
             XRInputManager.Instance.OnLeftTriggerPressed -= ToggleMode;
+            XRInputManager.Instance.OnBackPressed -= ExitPanel;
+        }
 
         if (_albumRolodexController != null)
             _albumRolodexController.OnItemSelected -= OnAlbumSelected;
