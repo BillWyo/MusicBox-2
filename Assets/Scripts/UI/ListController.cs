@@ -72,6 +72,8 @@ public class ListController : MonoBehaviour
         if (_dataSource != null && _visibleItems == 0)
             _visibleItems = 6;
 
+        CreatePanelBackground();
+
         if (_dataSource != null)
         {
             DataSource.OnDataChanged += RefreshItems;
@@ -83,6 +85,33 @@ public class ListController : MonoBehaviour
         {
             Debug.LogError("ListController: _dataSource is null in Start()!");
         }
+    }
+
+    void CreatePanelBackground()
+    {
+        GameObject bg = new GameObject("PanelBackground");
+        bg.transform.SetParent(transform);
+        bg.transform.localPosition = new Vector3(0, 0, 0.1f);
+
+        MeshFilter meshFilter = bg.AddComponent<MeshFilter>();
+        MeshRenderer meshRenderer = bg.AddComponent<MeshRenderer>();
+
+        Mesh bgMesh = new Mesh();
+        Vector3[] verts = new Vector3[4]
+        {
+            new Vector3(-1.2f, -(_visibleItems * _itemHeight / 2 + 0.5f), 0),
+            new Vector3(1.2f, -(_visibleItems * _itemHeight / 2 + 0.5f), 0),
+            new Vector3(1.2f, (_visibleItems * _itemHeight / 2 + 0.5f), 0),
+            new Vector3(-1.2f, (_visibleItems * _itemHeight / 2 + 0.5f), 0)
+        };
+        bgMesh.vertices = verts;
+        bgMesh.triangles = new int[6] { 0, 2, 1, 0, 3, 2 };
+        bgMesh.RecalculateNormals();
+        meshFilter.mesh = bgMesh;
+
+        Material bgMat = new Material(Shader.Find("Standard"));
+        bgMat.color = new Color(0.15f, 0.15f, 0.15f, 1f);
+        meshRenderer.material = bgMat;
     }
 
     void CreateItems()
@@ -101,7 +130,9 @@ public class ListController : MonoBehaviour
             MeshRenderer meshRenderer = item.AddComponent<MeshRenderer>();
 
             meshFilter.mesh = CreateQuadMesh();
-            meshRenderer.material = new Material(Shader.Find("Standard"));
+            Material mat = new Material(Shader.Find("Standard"));
+            mat.color = new Color(0.3f, 0.3f, 0.3f, 1f);
+            meshRenderer.material = mat;
             meshCollider.convex = true;
 
             GameObject textObj = new GameObject("TextLabel");

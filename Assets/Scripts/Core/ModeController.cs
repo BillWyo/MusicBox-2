@@ -17,10 +17,13 @@ public class ModeController : MonoBehaviour
     [SerializeField] private GameObject _albumRolodex;
     [SerializeField] private GameObject _playlistRolodex;
     [SerializeField] private GameObject _listPanel;
+    [SerializeField] private GameObject _playlistPanel;
     [SerializeField] private RolodexController _albumRolodexController;
     [SerializeField] private RolodexController _playlistRolodexController;
     [SerializeField] private ListController _listController;
+    [SerializeField] private ListController _playlistController;
     [SerializeField] private TrackListDataSource _trackListDataSource;
+    [SerializeField] private EditablePlaylistDataSource _editablePlaylistDataSource;
 
     private bool _subscribed;
     private bool _isCreating;
@@ -187,6 +190,24 @@ public class ModeController : MonoBehaviour
             Debug.LogError("_listPanel is null");
         }
 
+        // Show playlist panel and populate with centered playlist
+        if (_playlistPanel != null && _editablePlaylistDataSource != null)
+        {
+            int playlistIndex = _playlistRolodexController.CurrentIndex;
+            var playlists = PlaylistManager.Instance.GetAllPlaylists();
+            if (playlistIndex >= 0 && playlistIndex < playlists.Count)
+            {
+                _editablePlaylistDataSource.SetPlaylist(playlists[playlistIndex]);
+                Debug.Log($"Playlist panel showing: {playlists[playlistIndex].Name}");
+            }
+            else
+            {
+                _editablePlaylistDataSource.Clear();
+                Debug.Log("Playlist panel cleared (no valid playlist selected)");
+            }
+            _playlistPanel.SetActive(true);
+        }
+
         _isCreating = true;
         UpdateUIVisibility(CurrentMode);
     }
@@ -208,7 +229,7 @@ public class ModeController : MonoBehaviour
     void UpdateUIVisibility(Mode mode)
     {
         bool showCarousels = !_isCreating && !_isEditing;
-        bool showListPanel = _isCreating || _isEditing;
+        bool showPanels = _isCreating || _isEditing;
 
         if (_albumRolodex != null)
             _albumRolodex.SetActive(showCarousels);
@@ -217,9 +238,12 @@ public class ModeController : MonoBehaviour
             _playlistRolodex.SetActive(showCarousels);
 
         if (_listPanel != null)
-            _listPanel.SetActive(showListPanel);
+            _listPanel.SetActive(showPanels);
 
-        Debug.Log($"UI visibility updated for mode: {mode}, carousels: {showCarousels}, panels: {showListPanel}");
+        if (_playlistPanel != null)
+            _playlistPanel.SetActive(showPanels);
+
+        Debug.Log($"UI visibility updated for mode: {mode}, carousels: {showCarousels}, panels: {showPanels}");
     }
 
     void OnPlaylistSelected(int playlistIndex)
