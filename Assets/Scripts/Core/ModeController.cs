@@ -109,6 +109,19 @@ public class ModeController : MonoBehaviour
             _listController.SetDataSource(_trackListDataSource);
         }
 
+        // Create PlaylistPanel if missing
+        if (_playlistPanel == null)
+        {
+            _playlistPanel = new GameObject("PlaylistPanel");
+            _playlistPanel.transform.SetParent(uiContainer.transform);
+            _playlistController = _playlistPanel.AddComponent<ListController>();
+
+            GameObject editablePlaylistDataSourceObj = new GameObject("EditablePlaylistDataSource");
+            editablePlaylistDataSourceObj.transform.SetParent(uiContainer.transform);
+            _editablePlaylistDataSource = editablePlaylistDataSourceObj.AddComponent<EditablePlaylistDataSource>();
+            _playlistController.SetDataSource(_editablePlaylistDataSource);
+        }
+
         // Create NavigationUI if missing
         if (GameObject.Find("NavigationUI") == null)
         {
@@ -229,7 +242,10 @@ public class ModeController : MonoBehaviour
     void UpdateUIVisibility(Mode mode)
     {
         bool showCarousels = !_isCreating && !_isEditing;
-        bool showPanels = _isCreating || _isEditing;
+        bool showListPanel = _isCreating || _isEditing;
+        bool showPlaylistPanel = _isCreating;
+
+        Debug.Log($"UpdateUIVisibility: _isCreating={_isCreating}, _isEditing={_isEditing}, showPlaylistPanel={showPlaylistPanel}, _playlistPanel={_playlistPanel}");
 
         if (_albumRolodex != null)
             _albumRolodex.SetActive(showCarousels);
@@ -238,12 +254,19 @@ public class ModeController : MonoBehaviour
             _playlistRolodex.SetActive(showCarousels);
 
         if (_listPanel != null)
-            _listPanel.SetActive(showPanels);
+            _listPanel.SetActive(showListPanel);
 
         if (_playlistPanel != null)
-            _playlistPanel.SetActive(showPanels);
+        {
+            _playlistPanel.SetActive(showPlaylistPanel);
+            Debug.Log($"PlaylistPanel.SetActive({showPlaylistPanel})");
+        }
+        else
+        {
+            Debug.LogWarning("_playlistPanel is null in UpdateUIVisibility");
+        }
 
-        Debug.Log($"UI visibility updated for mode: {mode}, carousels: {showCarousels}, panels: {showPanels}");
+        Debug.Log($"UI visibility updated for mode: {mode}, carousels: {showCarousels}, listPanel: {showListPanel}, playlistPanel: {showPlaylistPanel}");
     }
 
     void OnPlaylistSelected(int playlistIndex)

@@ -180,7 +180,7 @@ public class RolodexController : MonoBehaviour
 
     void OnSelectPressed()
     {
-        if (!gameObject.activeSelf) return;
+        if (!gameObject.activeSelf || ModeController.Instance.CurrentMode != _activeInMode) return;
         if (DataSource == null || DataSource.Count == 0) return;
 
         int centerIndex = _visibleTiles / 2;

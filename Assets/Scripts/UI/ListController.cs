@@ -15,6 +15,7 @@ public class ListController : MonoBehaviour
     [SerializeField] private float _quadWidth = 1f;
     [SerializeField] private float _quadHeight = 1f;
     [SerializeField] private float _quadZOffset = 0f;
+    [SerializeField] private float _textZOffset = 2f;
     [SerializeField] private int _textFontSize = 18;
 
     private IListDataSource DataSource => _dataSource as IListDataSource;
@@ -150,7 +151,7 @@ public class ListController : MonoBehaviour
 
             GameObject textObj = new GameObject("TextLabel");
             textObj.transform.SetParent(item.transform);
-            textObj.transform.localPosition = new Vector3(0, 0, 2f);
+            textObj.transform.localPosition = new Vector3(0, 0, _textZOffset);
 
             TextMeshPro textMesh = textObj.AddComponent<TextMeshPro>();
             textMesh.text = DataSource.GetTitle((i + _offset) % count);
@@ -175,13 +176,7 @@ public class ListController : MonoBehaviour
 
         float yOffset = (centerIndex - visibleIndex) * _itemHeight;
         _items[visibleIndex].transform.localPosition = new Vector3(0, yOffset, _listDistance + _quadZOffset - 5f);
-
-        Camera cam = Camera.main;
-        if (cam != null)
-        {
-            Vector3 dirToCamera = cam.transform.position - _items[visibleIndex].transform.position;
-            _items[visibleIndex].transform.rotation = Quaternion.LookRotation(dirToCamera) * Quaternion.Euler(0, 180, 0);
-        }
+        _items[visibleIndex].transform.rotation = Quaternion.identity;
 
         TextMeshPro textMesh = _items[visibleIndex].GetComponentInChildren<TextMeshPro>();
         if (textMesh != null)
