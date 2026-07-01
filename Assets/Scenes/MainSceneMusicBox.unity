@@ -230,10 +230,13 @@ MonoBehaviour:
   _albumRolodex: {fileID: 481582815}
   _playlistRolodex: {fileID: 611546855}
   _listPanel: {fileID: 1845143536}
+  _playlistPanel: {fileID: 1022227808}
   _albumRolodexController: {fileID: 481582818}
   _playlistRolodexController: {fileID: 611546858}
-  _listController: {fileID: 0}
+  _listController: {fileID: 1845143538}
+  _playlistController: {fileID: 1022227810}
   _trackListDataSource: {fileID: 1857601050}
+  _editablePlaylistDataSource: {fileID: 890608706}
 --- !u!4 &104624437
 Transform:
   m_ObjectHideFlags: 0
@@ -488,6 +491,7 @@ Transform:
   - {fileID: 611546856}
   - {fileID: 1845143537}
   - {fileID: 457770119}
+  - {fileID: 1022227809}
   m_Father: {fileID: 774930830}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &410087039
@@ -755,6 +759,9 @@ MonoBehaviour:
   _radius: 9
   _angleStep: 30
   _tileHeight: 0
+  _tileWidth: 5
+  _tileHeight_mesh: 1
+  _activeInMode: 0
 --- !u!1 &611546855
 GameObject:
   m_ObjectHideFlags: 0
@@ -804,6 +811,9 @@ MonoBehaviour:
   _radius: 9
   _angleStep: 30
   _tileHeight: 0
+  _tileWidth: 5
+  _tileHeight_mesh: 1
+  _activeInMode: 1
 --- !u!1 &623154383
 GameObject:
   m_ObjectHideFlags: 0
@@ -1031,6 +1041,7 @@ Transform:
   - {fileID: 463760246}
   - {fileID: 1621437605}
   - {fileID: 1857601049}
+  - {fileID: 890608705}
   m_Father: {fileID: 907950085}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &832575517
@@ -1082,6 +1093,50 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &890608704
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 890608705}
+  - component: {fileID: 890608706}
+  m_Layer: 0
+  m_Name: EditablePlaylistDataSource
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &890608705
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 890608704}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 774930830}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &890608706
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 890608704}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 698af7c635d6aa64f986ffe9131755e0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::EditablePlaylistDataSource
 --- !u!1 &907950083
 GameObject:
   m_ObjectHideFlags: 0
@@ -1133,6 +1188,63 @@ Transform:
   - {fileID: 774930830}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1022227808
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1022227809}
+  - component: {fileID: 1022227810}
+  m_Layer: 0
+  m_Name: PlaylistPanel
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1022227809
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1022227808}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 30, y: 0, z: 60}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 376258478}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1022227810
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1022227808}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 694fa5d6516f4a24ead848a9ab1d6276, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ListController
+  _dataSource: {fileID: 890608706}
+  _visibleItems: 6
+  _itemHeight: 6
+  _itemWidth: 25
+  _listDistance: 5
+  _panelBackgroundColor: {r: 0.54901963, g: 0.54901963, b: 0.54901963, a: 1}
+  _itemColor: {r: 0.16470589, g: 0.16470589, b: 0.16470589, a: 1}
+  _panelPadding: 0.1
+  _quadScale: 2
+  _quadWidth: 0
+  _quadHeight: 0
+  _quadZOffset: -1
+  _textFontSize: 18
 --- !u!1 &1029135318
 GameObject:
   m_ObjectHideFlags: 0
@@ -1469,8 +1581,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1845143536}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 20}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 60}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1491,8 +1603,16 @@ MonoBehaviour:
   _dataSource: {fileID: 1857601050}
   _visibleItems: 6
   _itemHeight: 6
-  _itemWidth: 200
+  _itemWidth: 25
   _listDistance: 5
+  _panelBackgroundColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
+  _itemColor: {r: 0.3, g: 0.3, b: 0.3, a: 1}
+  _panelPadding: 0.1
+  _quadScale: 1
+  _quadWidth: 0
+  _quadHeight: 0
+  _quadZOffset: -1
+  _textFontSize: 18
 --- !u!1 &1857601048
 GameObject:
   m_ObjectHideFlags: 0

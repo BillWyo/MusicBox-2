@@ -8,6 +8,8 @@ public class RolodexController : MonoBehaviour
     [SerializeField] private float _radius = 3f;
     [SerializeField] private float _angleStep = 15f;
     [SerializeField] private float _tileHeight = 0f;
+    [SerializeField] private float _tileWidth = 1f;
+    [SerializeField] private float _tileHeight_mesh = 1f;
     [SerializeField] private ModeController.Mode _activeInMode = ModeController.Mode.Browse;
 
     public event System.Action<int> OnItemSelected;
@@ -89,7 +91,7 @@ public class RolodexController : MonoBehaviour
             MeshCollider meshCollider = tile.AddComponent<MeshCollider>();
             MeshRenderer meshRenderer = tile.AddComponent<MeshRenderer>();
 
-            meshFilter.mesh = CreateQuadMesh();
+            meshFilter.mesh = CreateQuadMesh(_tileWidth, _tileHeight_mesh);
             meshRenderer.material = new Material(Shader.Find("Standard"));
             meshCollider.convex = true;
 
@@ -186,15 +188,18 @@ public class RolodexController : MonoBehaviour
         OnItemSelected?.Invoke(selectedIndex);
     }
 
-    Mesh CreateQuadMesh()
+    Mesh CreateQuadMesh(float width, float height)
     {
         Mesh mesh = new Mesh();
+        float hw = width / 2f;
+        float hh = height / 2f;
+
         Vector3[] vertices = new Vector3[4]
         {
-            new Vector3(-0.5f, -0.5f, 0),
-            new Vector3(0.5f, -0.5f, 0),
-            new Vector3(0.5f, 0.5f, 0),
-            new Vector3(-0.5f, 0.5f, 0)
+            new Vector3(-hw, -hh, 0),
+            new Vector3(hw, -hh, 0),
+            new Vector3(hw, hh, 0),
+            new Vector3(-hw, hh, 0)
         };
 
         int[] triangles = new int[6]

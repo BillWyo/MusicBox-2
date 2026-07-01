@@ -8,6 +8,14 @@ public class ListController : MonoBehaviour
     [SerializeField] private float _itemHeight = 0.5f;
     [SerializeField] private float _itemWidth = 2f;
     [SerializeField] private float _listDistance = 5f;
+    [SerializeField] private Color _panelBackgroundColor = new Color(0.15f, 0.15f, 0.15f, 1f);
+    [SerializeField] private Color _itemColor = new Color(0.4f, 0.4f, 0.4f, 1f);
+    [SerializeField] private float _panelPadding = 0.5f;
+    [SerializeField] private float _quadScale = 1f;
+    [SerializeField] private float _quadWidth = 1f;
+    [SerializeField] private float _quadHeight = 1f;
+    [SerializeField] private float _quadZOffset = 0f;
+    [SerializeField] private int _textFontSize = 18;
 
     private IListDataSource DataSource => _dataSource as IListDataSource;
 
@@ -91,18 +99,21 @@ public class ListController : MonoBehaviour
     {
         GameObject bg = new GameObject("PanelBackground");
         bg.transform.SetParent(transform);
-        bg.transform.localPosition = new Vector3(0, 0, 0.1f);
+        bg.transform.localPosition = new Vector3(0, 0, 10f);
 
         MeshFilter meshFilter = bg.AddComponent<MeshFilter>();
         MeshRenderer meshRenderer = bg.AddComponent<MeshRenderer>();
 
+        float halfHeight = (_visibleItems * _itemHeight / 2) + _panelPadding;
+        float halfWidth = (_itemWidth / 2) + _panelPadding;
+
         Mesh bgMesh = new Mesh();
         Vector3[] verts = new Vector3[4]
         {
-            new Vector3(-1.2f, -(_visibleItems * _itemHeight / 2 + 0.5f), 0),
-            new Vector3(1.2f, -(_visibleItems * _itemHeight / 2 + 0.5f), 0),
-            new Vector3(1.2f, (_visibleItems * _itemHeight / 2 + 0.5f), 0),
-            new Vector3(-1.2f, (_visibleItems * _itemHeight / 2 + 0.5f), 0)
+            new Vector3(-halfWidth, -halfHeight, 0),
+            new Vector3(halfWidth, -halfHeight, 0),
+            new Vector3(halfWidth, halfHeight, 0),
+            new Vector3(-halfWidth, halfHeight, 0)
         };
         bgMesh.vertices = verts;
         bgMesh.triangles = new int[6] { 0, 2, 1, 0, 3, 2 };
@@ -110,7 +121,8 @@ public class ListController : MonoBehaviour
         meshFilter.mesh = bgMesh;
 
         Material bgMat = new Material(Shader.Find("Standard"));
-        bgMat.color = new Color(0.15f, 0.15f, 0.15f, 1f);
+        bgMat.color = _panelBackgroundColor;
+        bgMat.renderQueue = 1000;  // Render behind everything else
         meshRenderer.material = bgMat;
     }
 
@@ -131,18 +143,24 @@ public class ListController : MonoBehaviour
 
             meshFilter.mesh = CreateQuadMesh();
             Material mat = new Material(Shader.Find("Standard"));
-            mat.color = new Color(0.3f, 0.3f, 0.3f, 1f);
+            mat.color = _itemColor;
             meshRenderer.material = mat;
             meshCollider.convex = true;
+            item.transform.localScale = new Vector3(_quadScale, _quadScale, 1f);
 
             GameObject textObj = new GameObject("TextLabel");
             textObj.transform.SetParent(item.transform);
-            textObj.transform.localPosition = new Vector3(0, 0, 0.6f);
+            textObj.transform.localPosition = new Vector3(0, 0, 2f);
 
             TextMeshPro textMesh = textObj.AddComponent<TextMeshPro>();
             textMesh.text = DataSource.GetTitle((i + _offset) % count);
-            textMesh.fontSize = 18;
+            textMesh.fontSize = _textFontSize;
             textMesh.alignment = TextAlignmentOptions.Center;
+
+            if (textMesh.fontSharedMaterial != null)
+            {
+                textMesh.fontSharedMaterial.renderQueue = 5000;
+            }
 
             _items[i] = item;
             UpdateItemPosition(i);
@@ -156,7 +174,7 @@ public class ListController : MonoBehaviour
         int centerIndex = _visibleItems / 2;
 
         float yOffset = (centerIndex - visibleIndex) * _itemHeight;
-        _items[visibleIndex].transform.localPosition = new Vector3(0, yOffset, _listDistance);
+        _items[visibleIndex].transform.localPosition = new Vector3(0, yOffset, _listDistance + _quadZOffset - 5f);
 
         Camera cam = Camera.main;
         if (cam != null)
@@ -195,12 +213,15 @@ public class ListController : MonoBehaviour
     Mesh CreateQuadMesh()
     {
         Mesh mesh = new Mesh();
+        float hw = _quadWidth / 2f;
+        float hh = _quadHeight / 2f;
+
         Vector3[] vertices = new Vector3[4]
         {
-            new Vector3(-0.5f, -0.5f, 0),
-            new Vector3(0.5f, -0.5f, 0),
-            new Vector3(0.5f, 0.5f, 0),
-            new Vector3(-0.5f, 0.5f, 0)
+            new Vector3(-hw, -hh, 0),
+            new Vector3(hw, -hh, 0),
+            new Vector3(hw, hh, 0),
+            new Vector3(-hw, hh, 0)
         };
 
         int[] triangles = new int[6]
