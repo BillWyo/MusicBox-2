@@ -28,6 +28,10 @@ public class PlaylistManager : MonoBehaviour
         _playlists = new List<Playlist>
         {
             new Playlist {
+                Name = "",
+                Tracks = new List<Track>()
+            },
+            new Playlist {
                 Name = "Favorites",
                 Tracks = new List<Track>
                 {
