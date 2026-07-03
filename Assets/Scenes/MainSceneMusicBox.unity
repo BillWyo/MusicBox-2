@@ -26,7 +26,7 @@ RenderSettings:
   m_AmbientIntensity: 1
   m_AmbientMode: 0
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
-  m_SkyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
+  m_SkyboxMaterial: {fileID: 10651, guid: 0000000000000000f000000000000000, type: 0}
   m_HaloStrength: 0.5
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
@@ -736,7 +736,7 @@ Transform:
   m_GameObject: {fileID: 481582815}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
-  m_LocalPosition: {x: 0, y: 3, z: 20}
+  m_LocalPosition: {x: 0, y: 3, z: 15}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -760,7 +760,8 @@ MonoBehaviour:
   _angleStep: 30
   _tileHeight: 0
   _tileWidth: 5
-  _tileHeight_mesh: 1
+  _tileHeight_mesh: 5
+  _tileColor: {r: 0.7584905, g: 0.63161325, b: 0.13023138, a: 1}
   _activeInMode: 0
 --- !u!1 &611546855
 GameObject:
@@ -788,7 +789,7 @@ Transform:
   m_GameObject: {fileID: 611546855}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
-  m_LocalPosition: {x: 0, y: -3, z: 20}
+  m_LocalPosition: {x: 0, y: -3, z: 15}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -813,6 +814,7 @@ MonoBehaviour:
   _tileHeight: 0
   _tileWidth: 5
   _tileHeight_mesh: 1
+  _tileColor: {r: 0.735849, g: 0.4129444, b: 0.23741543, a: 1}
   _activeInMode: 1
 --- !u!1 &623154383
 GameObject:
@@ -1235,16 +1237,18 @@ MonoBehaviour:
   _dataSource: {fileID: 890608706}
   _visibleItems: 6
   _itemHeight: 4
-  _itemWidth: 15
+  _itemWidth: 17
   _listDistance: 5
-  _panelBackgroundColor: {r: 0.54901963, g: 0.54901963, b: 0.54901963, a: 1}
-  _itemColor: {r: 0.16470589, g: 0.16470589, b: 0.16470589, a: 1}
-  _panelPadding: 1.5
+  _panelBackgroundColor: {r: 0.15985046, g: 0.41132692, b: 0.5924529, a: 1}
+  _itemColor: {r: 0.39215687, g: 0.19607843, b: 0.19607843, a: 1}
+  _textColor: {r: 1, g: 1, b: 1, a: 1}
+  _textCenterColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  _panelPadding: 6
   _quadScale: 1
-  _quadWidth: 15
+  _quadWidth: 25
   _quadHeight: 3
-  _quadZOffset: 10
-  _textZOffset: 0
+  _quadZOffset: 9
+  _textZOffset: -1
   _textFontSize: 18
 --- !u!1 &1029135318
 GameObject:
@@ -1604,16 +1608,18 @@ MonoBehaviour:
   _dataSource: {fileID: 1857601050}
   _visibleItems: 6
   _itemHeight: 4
-  _itemWidth: 15
+  _itemWidth: 17
   _listDistance: 5
-  _panelBackgroundColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
-  _itemColor: {r: 0.3, g: 0.3, b: 0.3, a: 1}
-  _panelPadding: 1.5
+  _panelBackgroundColor: {r: 0.20104659, g: 0.38913158, b: 0.5698112, a: 1}
+  _itemColor: {r: 0.39215687, g: 0.19607843, b: 0.19607843, a: 1}
+  _textColor: {r: 1, g: 1, b: 1, a: 1}
+  _textCenterColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
+  _panelPadding: 6
   _quadScale: 1
-  _quadWidth: 15
+  _quadWidth: 25
   _quadHeight: 3
-  _quadZOffset: 10
-  _textZOffset: 0
+  _quadZOffset: 9
+  _textZOffset: -1
   _textFontSize: 18
 --- !u!1 &1857601048
 GameObject:

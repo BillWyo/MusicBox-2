@@ -33,7 +33,12 @@ public class EditablePlaylistDataSource : MonoBehaviour, IListDataSource
     {
         if (_tracks.Remove(track))
         {
+            Debug.Log($"Track removed: {track.Title}, remaining: {_tracks.Count}");
             OnDataChanged?.Invoke();
+        }
+        else
+        {
+            Debug.Log($"Track not found in playlist: {track.Title}");
         }
     }
 
@@ -42,6 +47,12 @@ public class EditablePlaylistDataSource : MonoBehaviour, IListDataSource
         _tracks.Clear();
         _playlist = null;
         OnDataChanged?.Invoke();
+    }
+
+    public Track GetTrack(int index)
+    {
+        if (index < 0 || index >= _tracks.Count) return null;
+        return _tracks[index];
     }
 
     public string GetTitle(int index)

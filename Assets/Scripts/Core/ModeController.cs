@@ -45,20 +45,6 @@ public class ModeController : MonoBehaviour
     void Update()
     {
         if (!_subscribed) TrySubscribe();
-
-        // Temporary: Press 'S' to save scene with current hierarchy
-        if (Keyboard.current != null && Keyboard.current.sKey.wasPressedThisFrame)
-        {
-            SaveSceneWithHierarchy();
-        }
-    }
-
-    void SaveSceneWithHierarchy()
-    {
-        #if UNITY_EDITOR
-        UnityEditor.SceneManagement.EditorSceneManager.SaveScene(gameObject.scene);
-        Debug.Log("Scene saved with current hierarchy");
-        #endif
     }
 
     void EnsureUIHierarchyExists()
@@ -156,6 +142,16 @@ public class ModeController : MonoBehaviour
         else
         {
             Debug.LogError("_playlistRolodexController is null");
+        }
+
+        if (_listController != null)
+        {
+            _listController.OnItemSelected += OnTrackSelected;
+        }
+
+        if (_playlistController != null)
+        {
+            _playlistController.OnItemSelected += OnPlaylistTrackSelected;
         }
 
         Debug.Log("ModeController subscribed to XRInputManager");
@@ -291,10 +287,11 @@ public class ModeController : MonoBehaviour
         Playlist selectedPlaylist = playlists[playlistIndex];
         Debug.Log($"Selected playlist: {selectedPlaylist.Name}, tracks: {selectedPlaylist.Tracks.Count}");
 
-        if (_trackListDataSource != null)
+        if (_editablePlaylistDataSource != null)
         {
-            Debug.Log("Setting playlist tracks on TrackListDataSource");
-            _trackListDataSource.SetTracks(selectedPlaylist.Tracks);
+            Debug.Log("Setting playlist on EditablePlaylistDataSource for editing");
+            _editablePlaylistDataSource.SetPlaylist(selectedPlaylist);
+            _listController.SetDataSource(_editablePlaylistDataSource);
         }
 
         if (_listPanel != null)
@@ -319,6 +316,33 @@ public class ModeController : MonoBehaviour
         Debug.Log("Exited Create/Edit mode");
     }
 
+    void OnTrackSelected(int trackIndex)
+    {
+        if (_isCreating && _trackListDataSource != null && _editablePlaylistDataSource != null)
+        {
+            Track track = _trackListDataSource.GetTrack(trackIndex);
+            if (track != null)
+            {
+                _editablePlaylistDataSource.AddTrack(track);
+                Debug.Log($"Added track to playlist: {track.Title}");
+            }
+        }
+        else if (_isEditing && _editablePlaylistDataSource != null)
+        {
+            Track track = _editablePlaylistDataSource.GetTrack(trackIndex);
+            if (track != null)
+            {
+                _editablePlaylistDataSource.RemoveTrack(track);
+                Debug.Log($"Removed track from playlist: {track.Title}");
+            }
+        }
+    }
+
+    void OnPlaylistTrackSelected(int trackIndex)
+    {
+        // Not currently used - OnTrackSelected handles both modes
+    }
+
     void OnDestroy()
     {
         if (XRInputManager.Instance != null)
@@ -332,5 +356,11 @@ public class ModeController : MonoBehaviour
 
         if (_playlistRolodexController != null)
             _playlistRolodexController.OnItemSelected -= OnPlaylistSelected;
+
+        if (_listController != null)
+            _listController.OnItemSelected -= OnTrackSelected;
+
+        if (_playlistController != null)
+            _playlistController.OnItemSelected -= OnPlaylistTrackSelected;
     }
 }

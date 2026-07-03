@@ -43,8 +43,10 @@ public class ListInputHandler : MonoBehaviour
 
     void OnSelectPressed()
     {
+        Debug.Log($"OnSelectPressed: active={gameObject.activeSelf}, controller={_listController}");
         if (!gameObject.activeSelf || _listController == null) return;
         _listController.SelectCenter();
+        Debug.Log("SelectCenter called");
     }
 
     void OnDestroy()

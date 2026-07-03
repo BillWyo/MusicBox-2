@@ -21,6 +21,12 @@ public class TrackListDataSource : MonoBehaviour, IListDataSource
         OnDataChanged?.Invoke();
     }
 
+    public Track GetTrack(int index)
+    {
+        if (index < 0 || index >= _tracks.Count) return null;
+        return _tracks[index];
+    }
+
     public string GetTitle(int index)
     {
         if (index < 0 || index >= _tracks.Count) return "";

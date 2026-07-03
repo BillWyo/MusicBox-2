@@ -10,6 +10,7 @@ public class RolodexController : MonoBehaviour
     [SerializeField] private float _tileHeight = 0f;
     [SerializeField] private float _tileWidth = 1f;
     [SerializeField] private float _tileHeight_mesh = 1f;
+    [SerializeField] private Color _tileColor = new Color(0.4f, 0.4f, 0.4f, 1f);
     [SerializeField] private ModeController.Mode _activeInMode = ModeController.Mode.Browse;
 
     public event System.Action<int> OnItemSelected;
@@ -17,6 +18,8 @@ public class RolodexController : MonoBehaviour
 
     private int _offset;
     private GameObject[] _tiles;
+    private float _scrollCooldown = 0.15f;
+    private float _lastScrollTime;
 
     private ITileDataSource DataSource => _dataSource as ITileDataSource;
 
@@ -92,7 +95,10 @@ public class RolodexController : MonoBehaviour
             MeshRenderer meshRenderer = tile.AddComponent<MeshRenderer>();
 
             meshFilter.mesh = CreateQuadMesh(_tileWidth, _tileHeight_mesh);
-            meshRenderer.material = new Material(Shader.Find("Standard"));
+            Shader unlitShader = Shader.Find("Unlit/Color");
+            Material mat = new Material(unlitShader != null ? unlitShader : Shader.Find("Standard"));
+            mat.color = _tileColor;
+            meshRenderer.material = mat;
             meshCollider.convex = true;
 
             GameObject textObj = new GameObject("TextLabel");
@@ -153,12 +159,14 @@ public class RolodexController : MonoBehaviour
     {
         if (!gameObject.activeSelf || ModeController.Instance.CurrentMode != _activeInMode) return;
         if (DataSource == null) return;
+        if (Time.time - _lastScrollTime < _scrollCooldown) return;
 
         int count = DataSource.Count;
         if (count == 0) return;
 
         // Single step advance/back on tap
         _offset = (_offset + direction + count) % count;
+        _lastScrollTime = Time.time;
         RefreshTiles();
         OnIndexChanged?.Invoke(CurrentIndex, count);
     }
@@ -167,6 +175,7 @@ public class RolodexController : MonoBehaviour
     {
         if (!gameObject.activeSelf || ModeController.Instance.CurrentMode != _activeInMode) return;
         if (DataSource == null) return;
+        if (Time.time - _lastScrollTime < _scrollCooldown) return;
 
         int count = DataSource.Count;
         if (count == 0) return;
@@ -174,6 +183,7 @@ public class RolodexController : MonoBehaviour
         // Rapid scroll on hold: advance 3 items per hold event
         int rapidAdvance = direction * 3;
         _offset = (_offset + rapidAdvance + count * 10) % count;
+        _lastScrollTime = Time.time;
         RefreshTiles();
         OnIndexChanged?.Invoke(CurrentIndex, count);
     }

@@ -8,8 +8,10 @@ public class ListController : MonoBehaviour
     [SerializeField] private float _itemHeight = 0.5f;
     [SerializeField] private float _itemWidth = 2f;
     [SerializeField] private float _listDistance = 5f;
-    [SerializeField] private Color _panelBackgroundColor = new Color(0.15f, 0.15f, 0.15f, 1f);
+    [SerializeField] private Color _panelBackgroundColor = new Color(0.25f, 0.25f, 0.25f, 1f);
     [SerializeField] private Color _itemColor = new Color(0.4f, 0.4f, 0.4f, 1f);
+    [SerializeField] private Color _textColor = Color.white;
+    [SerializeField] private Color _textCenterColor = Color.yellow;
     [SerializeField] private float _panelPadding = 0.5f;
     [SerializeField] private float _quadScale = 1f;
     [SerializeField] private float _quadWidth = 1f;
@@ -19,6 +21,8 @@ public class ListController : MonoBehaviour
     [SerializeField] private int _textFontSize = 18;
 
     private IListDataSource DataSource => _dataSource as IListDataSource;
+    private Material _panelBackgroundMaterial;
+    private Color _lastPanelBackgroundColor;
 
     public event System.Action<int> OnItemSelected;
 
@@ -26,16 +30,20 @@ public class ListController : MonoBehaviour
     public void ScrollUp()
     {
         if (!gameObject.activeSelf || _dataSource == null || DataSource.Count == 0) return;
+        if (Time.time - _lastScrollTime < _scrollCooldown) return;
         int count = DataSource.Count;
         _offset = (_offset - 1 + count) % count;
+        _lastScrollTime = Time.time;
         RefreshItems();
     }
 
     public void ScrollDown()
     {
         if (!gameObject.activeSelf || _dataSource == null || DataSource.Count == 0) return;
+        if (Time.time - _lastScrollTime < _scrollCooldown) return;
         int count = DataSource.Count;
         _offset = (_offset + 1) % count;
+        _lastScrollTime = Time.time;
         RefreshItems();
     }
 
@@ -75,6 +83,8 @@ public class ListController : MonoBehaviour
 
     private int _offset;
     private GameObject[] _items;
+    private float _scrollCooldown = 0.15f;
+    private float _lastScrollTime;
 
     void Start()
     {
@@ -93,6 +103,16 @@ public class ListController : MonoBehaviour
         else
         {
             Debug.LogError("ListController: _dataSource is null in Start()!");
+        }
+    }
+
+    void Update()
+    {
+        if (_panelBackgroundMaterial != null && _panelBackgroundColor != _lastPanelBackgroundColor)
+        {
+            Debug.Log($"Panel color changed from {_lastPanelBackgroundColor} to {_panelBackgroundColor}");
+            _panelBackgroundMaterial.color = _panelBackgroundColor;
+            _lastPanelBackgroundColor = _panelBackgroundColor;
         }
     }
 
@@ -121,10 +141,13 @@ public class ListController : MonoBehaviour
         bgMesh.RecalculateNormals();
         meshFilter.mesh = bgMesh;
 
-        Material bgMat = new Material(Shader.Find("Standard"));
-        bgMat.color = _panelBackgroundColor;
-        bgMat.renderQueue = 1000;  // Render behind everything else
-        meshRenderer.material = bgMat;
+        Shader unlitShader = Shader.Find("Unlit/Color");
+        Debug.Log($"Unlit shader found: {unlitShader != null}");
+        _panelBackgroundMaterial = new Material(unlitShader != null ? unlitShader : Shader.Find("Standard"));
+        _panelBackgroundMaterial.color = _panelBackgroundColor;
+        meshRenderer.material = _panelBackgroundMaterial;
+        _lastPanelBackgroundColor = _panelBackgroundColor;
+        Debug.Log($"Panel background created with color: {_panelBackgroundColor}, material: {_panelBackgroundMaterial}");
     }
 
     void CreateItems()
@@ -143,7 +166,8 @@ public class ListController : MonoBehaviour
             MeshRenderer meshRenderer = item.AddComponent<MeshRenderer>();
 
             meshFilter.mesh = CreateQuadMesh();
-            Material mat = new Material(Shader.Find("Standard"));
+            Shader unlitShader = Shader.Find("Unlit/Color");
+            Material mat = new Material(unlitShader != null ? unlitShader : Shader.Find("Standard"));
             mat.color = _itemColor;
             meshRenderer.material = mat;
             meshCollider.convex = true;
@@ -185,9 +209,9 @@ public class ListController : MonoBehaviour
             textMesh.text = title;
 
             if (visibleIndex == centerIndex)
-                textMesh.color = Color.yellow;
+                textMesh.color = _textCenterColor;
             else
-                textMesh.color = Color.white;
+                textMesh.color = _textColor;
         }
     }
 
