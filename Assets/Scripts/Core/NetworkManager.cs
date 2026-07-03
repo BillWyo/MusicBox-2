@@ -7,6 +7,9 @@ public class NetworkManager : MonoBehaviour
 
     public event System.Action<List<Album>> OnAlbumsLoaded;
 
+    [SerializeField] private bool _useMusicLibrary = false;
+    [SerializeField] private string _musicLibraryPath = "F:\\Music - Flac";
+
     private List<Album> _albums = new List<Album>();
 
     void Awake()
@@ -18,10 +21,19 @@ public class NetworkManager : MonoBehaviour
     void Start()
     {
         Debug.Log("NetworkManager initialized");
-        LoadDummyAlbums();
+        if (_useMusicLibrary)
+            LoadMusicLibrary();
+        else
+            LoadDummyAlbums();
     }
 
     public List<Album> GetAllAlbums() => _albums;
+
+    void LoadMusicLibrary()
+    {
+        _albums = MusicLibraryScanner.ScanMusicLibrary(_musicLibraryPath);
+        OnAlbumsLoaded?.Invoke(_albums);
+    }
 
     void LoadDummyAlbums()
     {
