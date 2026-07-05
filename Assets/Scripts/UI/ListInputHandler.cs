@@ -2,8 +2,17 @@ using UnityEngine;
 
 public class ListInputHandler : MonoBehaviour
 {
-    [SerializeField] private ListController _listController;
+    [SerializeField] private ListController _trackListController;
+    [SerializeField] private ListController _playlistController;
     private bool _subscribed;
+    private int _focusedListIndex = 0; // 0 = tracklist (right), 1 = playlist (left)
+
+    public void SetListControllers(ListController trackList, ListController playlist)
+    {
+        _trackListController = trackList;
+        _playlistController = playlist;
+        UpdateFocus();
+    }
 
     void Start()
     {
@@ -13,6 +22,7 @@ public class ListInputHandler : MonoBehaviour
             XRInputManager.Instance.OnRightTriggerPressed += OnSelectPressed;
             _subscribed = true;
             Debug.Log("ListInputHandler subscribed to XRInputManager");
+            UpdateFocus();
         }
         else
         {
@@ -28,25 +38,60 @@ public class ListInputHandler : MonoBehaviour
             XRInputManager.Instance.OnRightTriggerPressed += OnSelectPressed;
             _subscribed = true;
             Debug.Log("ListInputHandler retried subscription in Update()");
+            UpdateFocus();
         }
     }
 
     void OnJoystickMoved(Vector2 value)
     {
-        if (!gameObject.activeSelf || _listController == null) return;
+        if (!gameObject.activeSelf) return;
+
+        // X axis: left/right focus switching
+        if (value.x < -0.5f)
+            SwitchFocus(1); // Left -> Playlist
+        else if (value.x > 0.5f)
+            SwitchFocus(0); // Right -> Tracklist
+
+        // Y axis: scroll focused list
+        ListController focused = GetFocusedList();
+        if (focused == null) return;
 
         if (value.y < -0.5f)
-            _listController.ScrollDown();
+            focused.ScrollDown();
         else if (value.y > 0.5f)
-            _listController.ScrollUp();
+            focused.ScrollUp();
     }
 
     void OnSelectPressed()
     {
-        Debug.Log($"OnSelectPressed: active={gameObject.activeSelf}, controller={_listController}");
-        if (!gameObject.activeSelf || _listController == null) return;
-        _listController.SelectCenter();
-        Debug.Log("SelectCenter called");
+        if (!gameObject.activeSelf) return;
+
+        ListController focused = GetFocusedList();
+        if (focused == null) return;
+
+        focused.SelectCenter();
+    }
+
+    void SwitchFocus(int listIndex)
+    {
+        if (_focusedListIndex != listIndex)
+        {
+            _focusedListIndex = listIndex;
+            UpdateFocus();
+        }
+    }
+
+    ListController GetFocusedList()
+    {
+        return _focusedListIndex == 0 ? _trackListController : _playlistController;
+    }
+
+    void UpdateFocus()
+    {
+        if (_trackListController != null)
+            _trackListController.SetFocused(_focusedListIndex == 0);
+        if (_playlistController != null)
+            _playlistController.SetFocused(_focusedListIndex == 1);
     }
 
     void OnDestroy()

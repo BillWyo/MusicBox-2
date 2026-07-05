@@ -23,16 +23,39 @@ public class ListController : MonoBehaviour
     private IListDataSource DataSource => _dataSource as IListDataSource;
     private Material _panelBackgroundMaterial;
     private Color _lastPanelBackgroundColor;
+    private GameObject _focusBorder;
+    private bool _isFocused;
+    private GameObject _headerObj;
+    private TextMeshPro _headerText;
 
     public event System.Action<int> OnItemSelected;
+
+    public void SetFocused(bool focused)
+    {
+        _isFocused = focused;
+        if (_focusBorder != null)
+            _focusBorder.SetActive(focused);
+    }
+
+    public void SetHeader(string title)
+    {
+        if (_headerText != null)
+            _headerText.text = title;
+    }
 
     // Command interface
     public void ScrollUp()
     {
         if (!gameObject.activeSelf || _dataSource == null || DataSource.Count == 0) return;
         if (Time.time - _lastScrollTime < _scrollCooldown) return;
+
         int count = DataSource.Count;
-        _offset = (_offset - 1 + count) % count;
+        _selectedIndex = Mathf.Max(0, _selectedIndex - 1);
+
+        // Scroll if selection moves above visible range
+        if (_selectedIndex < _offset)
+            _offset = _selectedIndex;
+
         _lastScrollTime = Time.time;
         RefreshItems();
     }
@@ -41,8 +64,14 @@ public class ListController : MonoBehaviour
     {
         if (!gameObject.activeSelf || _dataSource == null || DataSource.Count == 0) return;
         if (Time.time - _lastScrollTime < _scrollCooldown) return;
+
         int count = DataSource.Count;
-        _offset = (_offset + 1) % count;
+        _selectedIndex = Mathf.Min(count - 1, _selectedIndex + 1);
+
+        // Scroll if selection moves below visible range
+        if (_selectedIndex >= _offset + _visibleItems)
+            _offset = Mathf.Max(0, _selectedIndex - _visibleItems + 1);
+
         _lastScrollTime = Time.time;
         RefreshItems();
     }
@@ -50,16 +79,13 @@ public class ListController : MonoBehaviour
     public void SelectCenter()
     {
         if (!gameObject.activeSelf || _dataSource == null || DataSource.Count == 0) return;
-        int centerIndex = _visibleItems / 2;
-        int selectedIndex = (_offset + centerIndex) % DataSource.Count;
-        OnItemSelected?.Invoke(selectedIndex);
+        OnItemSelected?.Invoke(_selectedIndex);
     }
 
     public int GetSelectedIndex()
     {
         if (_dataSource == null || DataSource.Count == 0) return -1;
-        int centerIndex = _visibleItems / 2;
-        return (_offset + centerIndex) % DataSource.Count;
+        return _selectedIndex;
     }
 
     public void SetDataSource(MonoBehaviour dataSource)
@@ -68,6 +94,9 @@ public class ListController : MonoBehaviour
             DataSource.OnDataChanged -= RefreshItems;
 
         _dataSource = dataSource;
+        _offset = 0;
+        _selectedIndex = 0;
+
         if (_dataSource != null)
             DataSource.OnDataChanged += RefreshItems;
 
@@ -82,6 +111,7 @@ public class ListController : MonoBehaviour
     }
 
     private int _offset;
+    private int _selectedIndex;
     private GameObject[] _items;
     private float _scrollCooldown = 0.15f;
     private float _lastScrollTime;
@@ -148,6 +178,88 @@ public class ListController : MonoBehaviour
         meshRenderer.material = _panelBackgroundMaterial;
         _lastPanelBackgroundColor = _panelBackgroundColor;
         Debug.Log($"Panel background created with color: {_panelBackgroundColor}, material: {_panelBackgroundMaterial}");
+
+        CreateFocusBorder(halfWidth, halfHeight);
+        CreateHeader();
+    }
+
+    void CreateFocusBorder(float halfWidth, float halfHeight)
+    {
+        _focusBorder = new GameObject("FocusBorder");
+        _focusBorder.transform.SetParent(transform);
+        _focusBorder.transform.localPosition = new Vector3(0, 0, 9.5f);
+        _focusBorder.SetActive(false);
+
+        MeshFilter meshFilter = _focusBorder.AddComponent<MeshFilter>();
+        MeshRenderer meshRenderer = _focusBorder.AddComponent<MeshRenderer>();
+
+        Mesh borderMesh = new Mesh();
+        float borderThickness = 0.1f;
+
+        // Create a border frame (4 quads around edges)
+        Vector3[] verts = new Vector3[16]
+        {
+            // Top border
+            new Vector3(-halfWidth - borderThickness, halfHeight, 0),
+            new Vector3(halfWidth + borderThickness, halfHeight, 0),
+            new Vector3(halfWidth + borderThickness, halfHeight + borderThickness, 0),
+            new Vector3(-halfWidth - borderThickness, halfHeight + borderThickness, 0),
+
+            // Bottom border
+            new Vector3(-halfWidth - borderThickness, -halfHeight - borderThickness, 0),
+            new Vector3(halfWidth + borderThickness, -halfHeight - borderThickness, 0),
+            new Vector3(halfWidth + borderThickness, -halfHeight, 0),
+            new Vector3(-halfWidth - borderThickness, -halfHeight, 0),
+
+            // Left border
+            new Vector3(-halfWidth - borderThickness, -halfHeight, 0),
+            new Vector3(-halfWidth, -halfHeight, 0),
+            new Vector3(-halfWidth, halfHeight, 0),
+            new Vector3(-halfWidth - borderThickness, halfHeight, 0),
+
+            // Right border
+            new Vector3(halfWidth, -halfHeight, 0),
+            new Vector3(halfWidth + borderThickness, -halfHeight, 0),
+            new Vector3(halfWidth + borderThickness, halfHeight, 0),
+            new Vector3(halfWidth, halfHeight, 0)
+        };
+
+        int[] triangles = new int[24]
+        {
+            0, 2, 1, 0, 3, 2,  // Top
+            4, 5, 6, 4, 6, 7,  // Bottom
+            8, 10, 9, 8, 11, 10,  // Left
+            12, 13, 14, 12, 14, 15  // Right
+        };
+
+        borderMesh.vertices = verts;
+        borderMesh.triangles = triangles;
+        borderMesh.RecalculateNormals();
+        meshFilter.mesh = borderMesh;
+
+        Shader unlitShader = Shader.Find("Unlit/Color");
+        Material borderMat = new Material(unlitShader != null ? unlitShader : Shader.Find("Standard"));
+        borderMat.color = new Color(0, 1, 1, 1); // Cyan highlight
+        meshRenderer.material = borderMat;
+    }
+
+    void CreateHeader()
+    {
+        _headerObj = new GameObject("Header");
+        _headerObj.transform.SetParent(transform);
+
+        float headerHeight = (_visibleItems * _itemHeight / 2) + _itemHeight + 0.5f;
+        _headerObj.transform.localPosition = new Vector3(0, headerHeight, 0);
+
+        _headerText = _headerObj.AddComponent<TextMeshPro>();
+        _headerText.text = "Playlist";
+        _headerText.fontSize = 36;
+        _headerText.alignment = TextAlignmentOptions.Center;
+        _headerText.color = Color.white;
+
+        RectTransform headerRect = _headerObj.GetComponent<RectTransform>();
+        if (headerRect != null)
+            headerRect.sizeDelta = new Vector2(_itemWidth, _itemHeight);
     }
 
     void CreateItems()
@@ -194,11 +306,21 @@ public class ListController : MonoBehaviour
 
     void UpdateItemPosition(int visibleIndex)
     {
-        if (DataSource.Count == 0 || _items == null || _items[visibleIndex] == null) return;
-        int dataIndex = (_offset + visibleIndex) % DataSource.Count;
-        int centerIndex = _visibleItems / 2;
+        if (DataSource.Count == 0 || _items == null || visibleIndex >= _items.Length) return;
+        if (_items[visibleIndex] == null) return;
 
-        float yOffset = (centerIndex - visibleIndex) * _itemHeight;
+        int dataIndex = _offset + visibleIndex;
+
+        // Don't render beyond data bounds
+        if (dataIndex >= DataSource.Count)
+        {
+            _items[visibleIndex].SetActive(false);
+            return;
+        }
+
+        _items[visibleIndex].SetActive(true);
+
+        float yOffset = ((_visibleItems - 1) * _itemHeight / 2f) - (visibleIndex * _itemHeight);
         _items[visibleIndex].transform.localPosition = new Vector3(0, yOffset, _listDistance + _quadZOffset - 5f);
         _items[visibleIndex].transform.rotation = Quaternion.identity;
 
@@ -208,7 +330,7 @@ public class ListController : MonoBehaviour
             string title = DataSource.GetTitle(dataIndex);
             textMesh.text = title;
 
-            if (visibleIndex == centerIndex)
+            if (dataIndex == _selectedIndex)
                 textMesh.color = _textCenterColor;
             else
                 textMesh.color = _textColor;

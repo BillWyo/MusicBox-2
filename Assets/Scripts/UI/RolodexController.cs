@@ -1,5 +1,7 @@
 using UnityEngine;
 using TMPro;
+using System.Collections.Generic;
+using System.IO;
 
 public class RolodexController : MonoBehaviour
 {
@@ -8,9 +10,12 @@ public class RolodexController : MonoBehaviour
     [SerializeField] private float _radius = 3f;
     [SerializeField] private float _angleStep = 15f;
     [SerializeField] private float _tileHeight = 0f;
-    [SerializeField] private float _tileWidth = 1f;
-    [SerializeField] private float _tileHeight_mesh = 1f;
+    [SerializeField] private float _tileWidth = 2f;
+    [SerializeField] private float _tileHeight_mesh = 2f;
     [SerializeField] private Color _tileColor = new Color(0.4f, 0.4f, 0.4f, 1f);
+    [SerializeField] private int _textFontSize = 18;
+    [SerializeField] private Color _textColor = Color.white;
+    [SerializeField] private Color _textCenterColor = Color.yellow;
     [SerializeField] private ModeController.Mode _activeInMode = ModeController.Mode.Browse;
 
     public event System.Action<int> OnItemSelected;
@@ -20,6 +25,7 @@ public class RolodexController : MonoBehaviour
     private GameObject[] _tiles;
     private float _scrollCooldown = 0.15f;
     private float _lastScrollTime;
+    private Dictionary<string, Texture2D> _textureCache = new Dictionary<string, Texture2D>();
 
     private ITileDataSource DataSource => _dataSource as ITileDataSource;
 
@@ -79,6 +85,29 @@ public class RolodexController : MonoBehaviour
             RefreshTiles();
     }
 
+    Texture2D LoadTextureFromFile(string filePath)
+    {
+        if (string.IsNullOrEmpty(filePath) || !File.Exists(filePath))
+            return null;
+
+        if (_textureCache.TryGetValue(filePath, out Texture2D cached))
+            return cached;
+
+        try
+        {
+            byte[] fileData = File.ReadAllBytes(filePath);
+            Texture2D tex = new Texture2D(2, 2, TextureFormat.RGB24, false);
+            tex.LoadImage(fileData);
+            _textureCache[filePath] = tex;
+            return tex;
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogWarning($"Failed to load texture from {filePath}: {e.Message}");
+            return null;
+        }
+    }
+
     void CreateTiles()
     {
         _tiles = new GameObject[_visibleTiles];
@@ -107,12 +136,58 @@ public class RolodexController : MonoBehaviour
 
             TextMeshPro textMesh = textObj.AddComponent<TextMeshPro>();
             textMesh.text = DataSource.GetTitle((i + _offset) % count);
-            textMesh.fontSize = 4;
+            textMesh.fontSize = _textFontSize;
             textMesh.alignment = TextAlignmentOptions.Center;
+
+            // Always create art overlay (will be hidden if no art)
+            CreateEmptyArtOverlay(tile);
 
             _tiles[i] = tile;
             UpdateTilePosition(i);
         }
+    }
+
+    void CreateEmptyArtOverlay(GameObject tile)
+    {
+        GameObject artObj = new GameObject("ArtOverlay");
+        artObj.transform.SetParent(tile.transform);
+        artObj.transform.localPosition = new Vector3(0, 0, -0.05f);
+
+        MeshFilter meshFilter = artObj.AddComponent<MeshFilter>();
+        MeshRenderer meshRenderer = artObj.AddComponent<MeshRenderer>();
+
+        meshFilter.mesh = CreateQuadMesh(_tileWidth, _tileHeight_mesh);
+
+        // Use Unlit/Texture shader which actually displays textures
+        Shader textureShader = Shader.Find("Unlit/Texture");
+        if (textureShader == null)
+            textureShader = Shader.Find("Standard");
+
+        Material artMat = new Material(textureShader);
+        artMat.color = Color.white;
+        meshRenderer.material = artMat;
+
+        artObj.SetActive(false); // Hidden by default
+    }
+
+    void CreateArtOverlay(GameObject tile, Texture2D texture)
+    {
+        GameObject artObj = new GameObject("ArtOverlay");
+        artObj.transform.SetParent(tile.transform);
+        artObj.transform.localPosition = new Vector3(0, 0, -0.05f); // Slight offset forward
+
+        MeshFilter meshFilter = artObj.AddComponent<MeshFilter>();
+        MeshRenderer meshRenderer = artObj.AddComponent<MeshRenderer>();
+
+        meshFilter.mesh = CreateQuadMesh(_tileWidth, _tileHeight_mesh);
+
+        // Use Standard shader with texture
+        Material artMat = new Material(Shader.Find("Standard"));
+        artMat.mainTexture = texture;
+        artMat.SetFloat("_Glossiness", 0); // Disable shine for flat appearance
+        meshRenderer.material = artMat;
+
+        Debug.Log($"Created art overlay for {artObj.transform.parent.name} with texture {texture.name}");
     }
 
     void UpdateTilePosition(int visibleIndex)
@@ -136,9 +211,37 @@ public class RolodexController : MonoBehaviour
             textMesh.text = $"{title}\n{subtitle}";
 
             if (visibleIndex == centerIndex)
-                textMesh.color = Color.yellow;
+                textMesh.color = _textCenterColor;
             else
-                textMesh.color = Color.white;
+                textMesh.color = _textColor;
+        }
+
+        // Update art overlay if this is an album carousel
+        if (_dataSource is AlbumDataSource albumSource)
+        {
+            Album album = albumSource.GetAlbum(dataIndex);
+            Transform artOverlay = _tiles[visibleIndex].transform.Find("ArtOverlay");
+            if (artOverlay != null)
+            {
+                if (album != null && album.HasArt && !string.IsNullOrEmpty(album.ArtPath))
+                {
+                    Texture2D artTexture = LoadTextureFromFile(album.ArtPath);
+                    if (artTexture != null)
+                    {
+                        MeshRenderer renderer = artOverlay.GetComponent<MeshRenderer>();
+                        if (renderer != null)
+                        {
+                            renderer.material.mainTexture = artTexture;
+                            Debug.Log($"Texture: {artTexture.width}x{artTexture.height}, format: {artTexture.format}, shader: {renderer.material.shader.name}");
+                        }
+                        artOverlay.gameObject.SetActive(true);
+                    }
+                }
+                else
+                {
+                    artOverlay.gameObject.SetActive(false);
+                }
+            }
         }
     }
 
@@ -212,6 +315,14 @@ public class RolodexController : MonoBehaviour
             new Vector3(-hw, hh, 0)
         };
 
+        Vector2[] uv = new Vector2[4]
+        {
+            new Vector2(0, 0),
+            new Vector2(1, 0),
+            new Vector2(1, 1),
+            new Vector2(0, 1)
+        };
+
         int[] triangles = new int[6]
         {
             0, 2, 1,
@@ -219,6 +330,7 @@ public class RolodexController : MonoBehaviour
         };
 
         mesh.vertices = vertices;
+        mesh.uv = uv;
         mesh.triangles = triangles;
         mesh.RecalculateNormals();
         return mesh;

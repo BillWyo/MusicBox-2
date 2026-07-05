@@ -7,6 +7,9 @@ public class PlaylistManager : MonoBehaviour
 
     public event System.Action<List<Playlist>> OnPlaylistsLoaded;
 
+    [SerializeField] private bool _usePlaylistFiles = true;
+    [SerializeField] private string _playlistPath = "\\\\HIS-BASE\\Music - FlacPlaylists";
+
     private List<Playlist> _playlists = new List<Playlist>();
 
     void Awake()
@@ -18,10 +21,65 @@ public class PlaylistManager : MonoBehaviour
     void Start()
     {
         Debug.Log("PlaylistManager initialized");
-        LoadDummyPlaylists();
+        if (_usePlaylistFiles)
+        {
+            if (NetworkManager.Instance != null)
+            {
+                List<Album> albums = NetworkManager.Instance.GetAllAlbums();
+                if (albums.Count > 0)
+                    LoadPlaylistsFromFiles(albums);
+                else
+                    NetworkManager.Instance.OnAlbumsLoaded += LoadPlaylistsFromFiles;
+            }
+            else
+                LoadDummyPlaylists();
+        }
+        else
+            LoadDummyPlaylists();
     }
 
     public List<Playlist> GetAllPlaylists() => _playlists;
+
+    public void SavePlaylist(Playlist playlist)
+    {
+        if (_usePlaylistFiles)
+        {
+            PlaylistJsonSaver.SavePlaylist(playlist, _playlistPath);
+
+            // Publish to Node-RED via MQTT
+            if (MQTTManager.Instance != null)
+            {
+                MQTTManager.Instance.PublishPlaylist(playlist);
+                Debug.Log($"Published playlist '{playlist.Name}' to Node-RED");
+            }
+        }
+    }
+
+    void LoadPlaylistsFromFiles(List<Album> albums = null)
+    {
+        if (NetworkManager.Instance == null)
+        {
+            Debug.LogError("PlaylistManager: NetworkManager not initialized");
+            LoadDummyPlaylists();
+            return;
+        }
+
+        if (albums == null)
+            albums = NetworkManager.Instance.GetAllAlbums();
+
+        Debug.Log($"PlaylistManager: Found {albums.Count} albums for playlist matching");
+        _playlists = PlaylistJsonLoader.LoadPlaylistsFromDirectory(_playlistPath, albums);
+
+        if (_playlists.Count == 0)
+        {
+            Debug.LogWarning("No playlists loaded from files, using dummy playlists");
+            LoadDummyPlaylists();
+        }
+        else
+        {
+            OnPlaylistsLoaded?.Invoke(_playlists);
+        }
+    }
 
     void LoadDummyPlaylists()
     {
@@ -81,5 +139,11 @@ public class PlaylistManager : MonoBehaviour
         };
 
         OnPlaylistsLoaded?.Invoke(_playlists);
+    }
+
+    void OnDestroy()
+    {
+        if (NetworkManager.Instance != null)
+            NetworkManager.Instance.OnAlbumsLoaded -= LoadPlaylistsFromFiles;
     }
 }

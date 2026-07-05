@@ -47,6 +47,12 @@ public class AlbumDataSource : MonoBehaviour, ITileDataSource
         return null;
     }
 
+    public Album GetAlbum(int index)
+    {
+        if (index < 0 || index >= _albums.Count) return null;
+        return _albums[index];
+    }
+
     void OnDestroy()
     {
         if (NetworkManager.Instance != null)

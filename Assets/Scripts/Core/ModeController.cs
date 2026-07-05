@@ -1,6 +1,7 @@
 using UnityEngine;
 using TMPro;
 using UnityEngine.InputSystem;
+using System.Collections.Generic;
 #if UNITY_EDITOR
 using UnityEditor.SceneManagement;
 #endif
@@ -28,6 +29,7 @@ public class ModeController : MonoBehaviour
     private bool _subscribed;
     private bool _isCreating;
     private bool _isEditing;
+    private Playlist _currentEditingPlaylist;
 
     void Awake()
     {
@@ -117,6 +119,24 @@ public class ModeController : MonoBehaviour
             navObj.AddComponent<NavigationUI>();
         }
 
+        // Wire up ListInputHandler
+        ListInputHandler listInputHandler = _listPanel?.GetComponent<ListInputHandler>();
+        if (listInputHandler == null)
+        {
+            listInputHandler = _listPanel?.AddComponent<ListInputHandler>();
+        }
+        if (listInputHandler != null)
+        {
+            listInputHandler.SetListControllers(_listController, _playlistController);
+        }
+
+        // Ensure MQTTManager exists
+        if (GameObject.Find("MQTTManager") == null)
+        {
+            GameObject mqttObj = new GameObject("MQTTManager");
+            mqttObj.AddComponent<MQTTManager>();
+        }
+
         Debug.Log("UI hierarchy ensured");
     }
 
@@ -125,6 +145,7 @@ public class ModeController : MonoBehaviour
         if (_subscribed || XRInputManager.Instance == null) return;
         XRInputManager.Instance.OnLeftTriggerPressed += ToggleMode;
         XRInputManager.Instance.OnBackPressed += ExitPanel;
+        XRInputManager.Instance.OnXButtonPressed += SaveCurrentPlaylist;
         _subscribed = true;
 
         if (_albumRolodexController != null)
@@ -189,6 +210,11 @@ public class ModeController : MonoBehaviour
             Debug.LogError("_trackListDataSource is null");
         }
 
+        if (_listController != null)
+        {
+            _listController.SetHeader(selectedAlbum.Title);
+        }
+
         if (_listPanel != null)
         {
             _listPanel.SetActive(true);
@@ -199,21 +225,18 @@ public class ModeController : MonoBehaviour
             Debug.LogError("_listPanel is null");
         }
 
-        // Show playlist panel and populate with centered playlist
+        // Show playlist panel with new generated playlist for Browse mode
         if (_playlistPanel != null && _editablePlaylistDataSource != null)
         {
-            int playlistIndex = _playlistRolodexController.CurrentIndex;
-            var playlists = PlaylistManager.Instance.GetAllPlaylists();
-            if (playlistIndex >= 0 && playlistIndex < playlists.Count)
+            // In Browse mode, create a fresh playlist with random generated name
+            string playlistName = PlaylistNameGenerator.GenerateName();
+            _currentEditingPlaylist = new Playlist
             {
-                _editablePlaylistDataSource.SetPlaylist(playlists[playlistIndex]);
-                Debug.Log($"Playlist panel showing: {playlists[playlistIndex].Name}");
-            }
-            else
-            {
-                _editablePlaylistDataSource.Clear();
-                Debug.Log("Playlist panel cleared (no valid playlist selected)");
-            }
+                Name = playlistName,
+                Tracks = new List<Track>()
+            };
+            _editablePlaylistDataSource.SetPlaylist(_currentEditingPlaylist);
+            Debug.Log($"Playlist panel showing: {playlistName}");
             _playlistPanel.SetActive(true);
         }
 
@@ -275,23 +298,47 @@ public class ModeController : MonoBehaviour
             return;
         }
 
-        var playlists = PlaylistManager.Instance.GetAllPlaylists();
-        Debug.Log($"Total playlists: {playlists.Count}");
-
-        if (playlistIndex < 0 || playlistIndex >= playlists.Count)
+        // playlistIndex 0 = blank card (create new)
+        Playlist selectedPlaylist;
+        if (playlistIndex == 0)
         {
-            Debug.LogError($"Playlist index {playlistIndex} out of range");
-            return;
+            // Create new playlist with random bird name
+            string newName = PlaylistNameGenerator.GenerateName();
+            selectedPlaylist = new Playlist
+            {
+                Name = newName,
+                Tracks = new List<Track>()
+            };
+            Debug.Log($"Creating new playlist: {newName}");
+        }
+        else
+        {
+            // Load existing playlist (index offset by 1 due to blank card at 0)
+            var playlists = PlaylistManager.Instance.GetAllPlaylists();
+            int actualIndex = playlistIndex - 1;
+
+            if (actualIndex < 0 || actualIndex >= playlists.Count)
+            {
+                Debug.LogError($"Playlist index {actualIndex} out of range");
+                return;
+            }
+
+            selectedPlaylist = playlists[actualIndex];
+            Debug.Log($"Selected playlist: {selectedPlaylist.Name}, tracks: {selectedPlaylist.Tracks.Count}");
         }
 
-        Playlist selectedPlaylist = playlists[playlistIndex];
-        Debug.Log($"Selected playlist: {selectedPlaylist.Name}, tracks: {selectedPlaylist.Tracks.Count}");
+        _currentEditingPlaylist = selectedPlaylist;
 
         if (_editablePlaylistDataSource != null)
         {
             Debug.Log("Setting playlist on EditablePlaylistDataSource for editing");
-            _editablePlaylistDataSource.SetPlaylist(selectedPlaylist);
             _listController.SetDataSource(_editablePlaylistDataSource);
+            _editablePlaylistDataSource.SetPlaylist(selectedPlaylist);
+        }
+
+        if (_listController != null)
+        {
+            _listController.SetHeader(selectedPlaylist.Name);
         }
 
         if (_listPanel != null)
@@ -310,10 +357,21 @@ public class ModeController : MonoBehaviour
 
     public void ExitPanel()
     {
+        _currentEditingPlaylist = null;
         _isCreating = false;
         _isEditing = false;
         UpdateUIVisibility(CurrentMode);
         Debug.Log("Exited Create/Edit mode");
+    }
+
+    void SaveCurrentPlaylist()
+    {
+        Debug.Log($"SaveCurrentPlaylist called: _currentEditingPlaylist={_currentEditingPlaylist?.Name}, PlaylistManager={PlaylistManager.Instance}");
+        if (_currentEditingPlaylist != null && PlaylistManager.Instance != null)
+        {
+            PlaylistManager.Instance.SavePlaylist(_currentEditingPlaylist);
+            Debug.Log($"Saved playlist: {_currentEditingPlaylist.Name}");
+        }
     }
 
     void OnTrackSelected(int trackIndex)
@@ -349,6 +407,7 @@ public class ModeController : MonoBehaviour
         {
             XRInputManager.Instance.OnLeftTriggerPressed -= ToggleMode;
             XRInputManager.Instance.OnBackPressed -= ExitPanel;
+            XRInputManager.Instance.OnXButtonPressed -= SaveCurrentPlaylist;
         }
 
         if (_albumRolodexController != null)

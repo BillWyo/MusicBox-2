@@ -339,7 +339,7 @@ Camera:
   m_GameObject: {fileID: 330585543}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 1
+  m_ClearFlags: 2
   m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
@@ -736,7 +736,7 @@ Transform:
   m_GameObject: {fileID: 481582815}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
-  m_LocalPosition: {x: 0, y: 3, z: 15}
+  m_LocalPosition: {x: 0, y: 2, z: 20}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -756,12 +756,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RolodexController
   _dataSource: {fileID: 463760247}
   _visibleTiles: 3
-  _radius: 9
+  _radius: 11
   _angleStep: 30
   _tileHeight: 0
   _tileWidth: 5
-  _tileHeight_mesh: 5
+  _tileHeight_mesh: 6
   _tileColor: {r: 0.7584905, g: 0.63161325, b: 0.13023138, a: 1}
+  _textFontSize: 4
+  _textColor: {r: 1, g: 1, b: 1, a: 1}
+  _textCenterColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   _activeInMode: 0
 --- !u!1 &611546855
 GameObject:
@@ -789,7 +792,7 @@ Transform:
   m_GameObject: {fileID: 611546855}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 1, z: 0, w: 0}
-  m_LocalPosition: {x: 0, y: -3, z: 15}
+  m_LocalPosition: {x: 0, y: -3, z: 20}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -809,12 +812,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RolodexController
   _dataSource: {fileID: 1621437606}
   _visibleTiles: 3
-  _radius: 9
+  _radius: 11
   _angleStep: 30
   _tileHeight: 0
   _tileWidth: 5
   _tileHeight_mesh: 1
   _tileColor: {r: 0.735849, g: 0.4129444, b: 0.23741543, a: 1}
+  _textFontSize: 4
+  _textColor: {r: 1, g: 1, b: 1, a: 1}
+  _textCenterColor: {r: 1, g: 0.92156863, b: 0.015686275, a: 1}
   _activeInMode: 1
 --- !u!1 &623154383
 GameObject:
@@ -1249,7 +1255,7 @@ MonoBehaviour:
   _quadHeight: 3
   _quadZOffset: 9
   _textZOffset: -1
-  _textFontSize: 18
+  _textFontSize: 12
 --- !u!1 &1029135318
 GameObject:
   m_ObjectHideFlags: 0
@@ -1502,6 +1508,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cdcc801495f379e41a1ee1b31593d549, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlaylistManager
+  _usePlaylistFiles: 0
+  _playlistPath: \\HIS-BASE\Music-FlacPlaylists
 --- !u!4 &1600934984
 Transform:
   m_ObjectHideFlags: 0
@@ -1620,7 +1628,7 @@ MonoBehaviour:
   _quadHeight: 3
   _quadZOffset: 9
   _textZOffset: -1
-  _textFontSize: 18
+  _textFontSize: 12
 --- !u!1 &1857601048
 GameObject:
   m_ObjectHideFlags: 0
@@ -1797,6 +1805,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 04e689be3bce6434fa74f0f9b098198a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NetworkManager
+  _useMusicLibrary: 1
+  _musicLibraryPath: \\HIS-BASE\Music - Flac
 --- !u!4 &2081056513
 Transform:
   m_ObjectHideFlags: 0
