@@ -300,9 +300,14 @@ public class ListController : MonoBehaviour
 
     void CreateItems()
     {
-        _items = new GameObject[_visibleItems];
         int count = DataSource.Count;
-        if (count == 0) return;
+        if (count == 0)
+        {
+            _items = null;
+            return;
+        }
+
+        _items = new GameObject[_visibleItems];
 
         for (int i = 0; i < _visibleItems; i++)
         {
