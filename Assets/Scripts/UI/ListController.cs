@@ -27,6 +27,7 @@ public class ListController : MonoBehaviour
     private bool _isFocused;
     private GameObject _headerObj;
     private TextMeshPro _headerText;
+    private bool _panelCreated;
 
     public event System.Action<int> OnItemSelected;
 
@@ -39,8 +40,14 @@ public class ListController : MonoBehaviour
 
     public void SetHeader(string title)
     {
+        if (_headerText == null)
+        {
+            CreatePanelBackground();
+        }
         if (_headerText != null)
+        {
             _headerText.text = title;
+        }
     }
 
     // Command interface
@@ -121,7 +128,8 @@ public class ListController : MonoBehaviour
         if (_dataSource != null && _visibleItems == 0)
             _visibleItems = 6;
 
-        CreatePanelBackground();
+        if (!_panelCreated)
+            CreatePanelBackground();
 
         if (_dataSource != null)
         {
@@ -148,6 +156,8 @@ public class ListController : MonoBehaviour
 
     void CreatePanelBackground()
     {
+        if (_panelCreated) return;
+
         GameObject bg = new GameObject("PanelBackground");
         bg.transform.SetParent(transform);
         bg.transform.localPosition = new Vector3(0, 0, 10f);
@@ -181,6 +191,7 @@ public class ListController : MonoBehaviour
 
         CreateFocusBorder(halfWidth, halfHeight);
         CreateHeader();
+        _panelCreated = true;
     }
 
     void CreateFocusBorder(float halfWidth, float halfHeight)
@@ -253,7 +264,7 @@ public class ListController : MonoBehaviour
 
         _headerText = _headerObj.AddComponent<TextMeshPro>();
         _headerText.text = "Playlist";
-        _headerText.fontSize = 36;
+        _headerText.fontSize = 20;
         _headerText.alignment = TextAlignmentOptions.Center;
         _headerText.color = Color.white;
 

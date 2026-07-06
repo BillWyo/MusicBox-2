@@ -210,15 +210,16 @@ public class ModeController : MonoBehaviour
             Debug.LogError("_trackListDataSource is null");
         }
 
-        if (_listController != null)
-        {
-            _listController.SetHeader(selectedAlbum.Title);
-        }
-
         if (_listPanel != null)
         {
             _listPanel.SetActive(true);
             Debug.Log($"Showing tracks for album: {selectedAlbum.Title}");
+        }
+
+        if (_listController != null)
+        {
+            string headerText = $"{selectedAlbum.Title} - {selectedAlbum.Artist}";
+            _listController.SetHeader(headerText);
         }
         else
         {
@@ -238,6 +239,11 @@ public class ModeController : MonoBehaviour
             _editablePlaylistDataSource.SetPlaylist(_currentEditingPlaylist);
             Debug.Log($"Playlist panel showing: {playlistName}");
             _playlistPanel.SetActive(true);
+
+            if (_playlistController != null)
+            {
+                _playlistController.SetHeader(playlistName);
+            }
         }
 
         _isCreating = true;
@@ -329,6 +335,12 @@ public class ModeController : MonoBehaviour
 
         _currentEditingPlaylist = selectedPlaylist;
 
+        if (_listPanel != null)
+        {
+            _listPanel.SetActive(true);
+            Debug.Log($"Showing tracks for playlist: {selectedPlaylist.Name}");
+        }
+
         if (_editablePlaylistDataSource != null)
         {
             Debug.Log("Setting playlist on EditablePlaylistDataSource for editing");
@@ -339,12 +351,6 @@ public class ModeController : MonoBehaviour
         if (_listController != null)
         {
             _listController.SetHeader(selectedPlaylist.Name);
-        }
-
-        if (_listPanel != null)
-        {
-            _listPanel.SetActive(true);
-            Debug.Log($"Showing tracks for playlist: {selectedPlaylist.Name}");
         }
         else
         {
@@ -371,6 +377,7 @@ public class ModeController : MonoBehaviour
         {
             PlaylistManager.Instance.SavePlaylist(_currentEditingPlaylist);
             Debug.Log($"Saved playlist: {_currentEditingPlaylist.Name}");
+            ExitPanel();
         }
     }
 
