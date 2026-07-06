@@ -95,6 +95,31 @@ public class ListController : MonoBehaviour
         return _selectedIndex;
     }
 
+    public void CenterOnLast()
+    {
+        if (_dataSource == null || DataSource.Count == 0) return;
+        int count = DataSource.Count;
+        _selectedIndex = count - 1;
+        int centerOffset = Mathf.Max(0, _selectedIndex - _visibleItems / 2);
+        _offset = Mathf.Min(centerOffset, Mathf.Max(0, count - _visibleItems));
+        RefreshItems();
+    }
+
+    public void ResetView()
+    {
+        _offset = 0;
+        _selectedIndex = 0;
+        if (_items != null)
+        {
+            foreach (var item in _items)
+            {
+                if (item != null) Destroy(item);
+            }
+            _items = null;
+        }
+        RefreshItems();
+    }
+
     public void SetDataSource(MonoBehaviour dataSource)
     {
         if (_dataSource != null)

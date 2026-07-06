@@ -7,8 +7,8 @@ public class NetworkManager : MonoBehaviour
 
     public event System.Action<List<Album>> OnAlbumsLoaded;
 
-    [SerializeField] private bool _useMusicLibrary = false;
-    [SerializeField] private string _musicLibraryPath = "F:\\Music - Flac";
+    [SerializeField] private bool _useMusicLibrary = true;
+    [SerializeField] private string _musicLibraryPath = "\\\\HIS-BASE\\Music - Flac";
 
     private List<Album> _albums = new List<Album>();
 

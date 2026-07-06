@@ -89,6 +89,7 @@ public class ModeController : MonoBehaviour
         {
             _listPanel = new GameObject("ListPanel");
             _listPanel.transform.SetParent(uiContainer.transform);
+            _listPanel.transform.localPosition = new Vector3(-3, 0, 0);
             _listController = _listPanel.AddComponent<ListController>();
 
             GameObject trackDataSourceObj = new GameObject("TrackListDataSource");
@@ -102,12 +103,18 @@ public class ModeController : MonoBehaviour
         {
             _playlistPanel = new GameObject("PlaylistPanel");
             _playlistPanel.transform.SetParent(uiContainer.transform);
+            _playlistPanel.transform.localPosition = new Vector3(3, 0, 0);
             _playlistController = _playlistPanel.AddComponent<ListController>();
 
             GameObject editablePlaylistDataSourceObj = new GameObject("EditablePlaylistDataSource");
             editablePlaylistDataSourceObj.transform.SetParent(uiContainer.transform);
             _editablePlaylistDataSource = editablePlaylistDataSourceObj.AddComponent<EditablePlaylistDataSource>();
             _playlistController.SetDataSource(_editablePlaylistDataSource);
+
+            // Set visible items to 8 to match track list display
+            var field = typeof(ListController).GetField("_visibleItems", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+            if (field != null)
+                field.SetValue(_playlistController, 8);
         }
 
         // Create NavigationUI if missing
@@ -236,6 +243,10 @@ public class ModeController : MonoBehaviour
                 Name = playlistName,
                 Tracks = new List<Track>()
             };
+            if (_playlistController != null)
+            {
+                _playlistController.ResetView();
+            }
             _editablePlaylistDataSource.SetPlaylist(_currentEditingPlaylist);
             Debug.Log($"Playlist panel showing: {playlistName}");
             _playlistPanel.SetActive(true);
@@ -390,6 +401,8 @@ public class ModeController : MonoBehaviour
             {
                 _editablePlaylistDataSource.AddTrack(track);
                 Debug.Log($"Added track to playlist: {track.Title}");
+                if (_playlistController != null)
+                    _playlistController.CenterOnLast();
             }
         }
         else if (_isEditing && _editablePlaylistDataSource != null)
