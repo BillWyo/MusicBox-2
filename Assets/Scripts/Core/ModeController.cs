@@ -412,6 +412,10 @@ public class ModeController : MonoBehaviour
             {
                 _editablePlaylistDataSource.RemoveTrack(track);
                 Debug.Log($"Removed track from playlist: {track.Title}");
+                if (_playlistController != null)
+                {
+                    _playlistController.MoveSelectionUp();
+                }
             }
         }
     }

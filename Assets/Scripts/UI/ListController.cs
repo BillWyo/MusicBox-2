@@ -105,6 +105,29 @@ public class ListController : MonoBehaviour
         RefreshItems();
     }
 
+    public void EnsureSelectedVisible()
+    {
+        if (_dataSource == null || DataSource.Count == 0) return;
+        int count = DataSource.Count;
+
+        // If selection is above visible range, scroll to show it at top
+        if (_selectedIndex < _offset)
+            _offset = _selectedIndex;
+
+        // If selection is below visible range, scroll to show it at bottom
+        if (_selectedIndex >= _offset + _visibleItems)
+            _offset = Mathf.Max(0, _selectedIndex - _visibleItems + 1);
+
+        RefreshItems();
+    }
+
+    public void MoveSelectionUp()
+    {
+        if (_dataSource == null || DataSource.Count == 0) return;
+        _selectedIndex = Mathf.Max(0, _selectedIndex - 1);
+        EnsureSelectedVisible();
+    }
+
     public void ResetView()
     {
         _offset = 0;
