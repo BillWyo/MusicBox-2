@@ -65,7 +65,7 @@ public class MQTTManager : MonoBehaviour
             List<string> trackObjs = new List<string>();
             foreach (Track track in playlist.Tracks)
             {
-                string trackJson = $"{{\"title\":\"{EscapeJson(track.Title)}\",\"artist\":\"{EscapeJson(track.Artist)}\",\"uri\":\"{EscapeJson(track.Uri)}\"}}";
+                string trackJson = $"{{\"title\":\"{EscapeJson(track.Title)}\",\"artist\":\"{EscapeJson(track.Artist)}\",\"album\":\"{EscapeJson(track.Album)}\",\"uri\":\"{EscapeJson(track.Uri)}\"}}";
                 trackObjs.Add(trackJson);
             }
             tracksJson = "[" + string.Join(",", trackObjs) + "]";

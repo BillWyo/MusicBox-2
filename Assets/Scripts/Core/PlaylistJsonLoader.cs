@@ -65,11 +65,12 @@ public class PlaylistJsonLoader
                     string trackJson = tracksJson.Substring(objStart, objEnd - objStart + 1);
 
                     string title = ExtractJsonString(trackJson, "title");
-                    string artist = ExtractJsonString(trackJson, "album");
+                    string artist = ExtractJsonString(trackJson, "artist");
+                    string album = ExtractJsonString(trackJson, "album");
                     string uri = ExtractJsonString(trackJson, "uri");
 
-                    // Match track to library by title
-                    Track matchedTrack = FindTrackInLibrary(title, artist, albums);
+                    // Match track to library by title, artist, and album
+                    Track matchedTrack = FindTrackInLibrary(title, artist, album, albums);
                     if (matchedTrack != null)
                     {
                         // Use the HTTP URI from playlist for playback
@@ -127,20 +128,30 @@ public class PlaylistJsonLoader
         return text.Length - 1;
     }
 
-    static Track FindTrackInLibrary(string trackTitle, string artistOrAlbum, List<Album> albums)
+    static Track FindTrackInLibrary(string trackTitle, string trackArtist, string trackAlbum, List<Album> albums)
     {
         // Unescape HTML entities
         string unescapedTitle = UnescapeHtmlEntities(trackTitle);
-        Debug.Log($"Matching track: '{trackTitle}' -> '{unescapedTitle}'");
+        string unescapedArtist = UnescapeHtmlEntities(trackArtist);
+        string unescapedAlbum = UnescapeHtmlEntities(trackAlbum);
+        Debug.Log($"Matching track: '{trackTitle}' by {trackArtist} from {trackAlbum}");
 
         foreach (Album album in albums)
         {
+            // Match album first if available
+            if (!string.IsNullOrEmpty(unescapedAlbum) && !album.Title.Equals(unescapedAlbum, System.StringComparison.OrdinalIgnoreCase))
+                continue;
+
+            // Match artist if available
+            if (!string.IsNullOrEmpty(unescapedArtist) && !album.Artist.Equals(unescapedArtist, System.StringComparison.OrdinalIgnoreCase))
+                continue;
+
             foreach (Track track in album.Tracks)
             {
                 // Match by title (case-insensitive)
                 if (track.Title.Equals(unescapedTitle, System.StringComparison.OrdinalIgnoreCase))
                 {
-                    Debug.Log($"  ✓ Found in album '{album.Title}': {track.Title}");
+                    Debug.Log($"  ✓ Found in album '{album.Title}' by {album.Artist}: {track.Title}");
                     return track;
                 }
             }
