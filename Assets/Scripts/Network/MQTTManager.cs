@@ -24,12 +24,25 @@ public class MQTTManager : MonoBehaviour
     {
         try
         {
-            PlaylistJsonSaver.SavePlaylist(playlist, _playlistPath);
-            Debug.Log($"[SAVED] Playlist '{playlist.Name}' written to {_playlistPath}");
+            if (playlist == null)
+            {
+                Debug.LogError("MQTTManager.PublishPlaylist: playlist is null");
+                return;
+            }
+
+            bool success = PlaylistJsonSaver.SavePlaylist(playlist, _playlistPath);
+            if (success)
+            {
+                Debug.Log($"[SAVED] Playlist '{playlist.Name}' ({playlist.Tracks.Count} tracks) to {_playlistPath}");
+            }
+            else
+            {
+                Debug.LogError($"[FAILED] PlaylistJsonSaver returned false for '{playlist.Name}'");
+            }
         }
         catch (System.Exception e)
         {
-            Debug.LogError($"Failed to save playlist: {e.Message}");
+            Debug.LogError($"[ERROR] Failed to save playlist: {e.Message}\n{e.StackTrace}");
         }
     }
 

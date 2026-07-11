@@ -42,6 +42,7 @@ public class PlaylistJsonSaver
                 Track track = playlist.Tracks[i];
                 sb.Append("    {\n");
                 sb.Append($"      \"title\": \"{EscapeJsonString(track.Title)}\",\n");
+                sb.Append($"      \"artist\": \"{EscapeJsonString(track.Artist ?? "")}\",\n");
                 sb.Append($"      \"album\": \"{EscapeJsonString(track.Album ?? "")}\",\n");
                 sb.Append($"      \"uri\": \"{EscapeJsonString(track.Uri ?? "")}\"\n");
                 sb.Append("    }");
