@@ -1,6 +1,8 @@
 using UnityEngine;
 using System.Collections.Generic;
 using System.Text;
+using uPLibrary.Networking.M2Mqtt;
+using uPLibrary.Networking.M2Mqtt.Messages;
 
 public class MQTTManager : MonoBehaviour
 {
@@ -9,6 +11,7 @@ public class MQTTManager : MonoBehaviour
     [SerializeField] private string _brokerAddress = "192.168.1.18";
     [SerializeField] private int _brokerPort = 1883;
 
+    private MqttClient _client;
     private bool _isConnected;
 
     void Awake()
@@ -19,22 +22,35 @@ public class MQTTManager : MonoBehaviour
 
     void Start()
     {
-        // TODO: Implement MQTT connection when M2Mqtt library is available
-        _isConnected = true;
-        Debug.Log($"MQTT Manager ready (stub mode - library not yet integrated)");
+        try
+        {
+            _client = new MqttClient(_brokerAddress, _brokerPort, false, null, null, MqttSslProtocols.None);
+            _client.Connect(System.Guid.NewGuid().ToString());
+            _isConnected = true;
+            Debug.Log($"MQTT connected to {_brokerAddress}:{_brokerPort}");
+        }
+        catch (System.Exception e)
+        {
+            _isConnected = false;
+            Debug.LogError($"MQTT connection failed: {e.Message}");
+        }
     }
 
     public void PublishPlaylist(Playlist playlist, bool isNew = false)
     {
         try
         {
-            // Publish playlist data as JSON to Node-RED
+            if (!_isConnected || _client == null)
+            {
+                Debug.LogError("MQTT not connected, cannot publish");
+                return;
+            }
+
             string json = PlaylistToJson(playlist);
             string topic = "home/music/playlists/create";
 
-            // TODO: Replace with actual M2Mqtt publish when library available
-            Debug.Log($"[MQTT PUBLISH] Topic: {topic}");
-            Debug.Log($"[MQTT PUBLISH] Payload: {json}");
+            _client.Publish(topic, Encoding.UTF8.GetBytes(json), MqttMsgBase.QOS_LEVEL_1, true);
+            Debug.Log($"[MQTT PUBLISHED] Topic: {topic}, Playlist: {playlist.Name}");
         }
         catch (System.Exception e)
         {
@@ -46,9 +62,17 @@ public class MQTTManager : MonoBehaviour
     {
         try
         {
+            if (!_isConnected || _client == null)
+            {
+                Debug.LogError("MQTT not connected, cannot publish");
+                return;
+            }
+
             string json = PlaylistListToJson(playlists);
-            Debug.Log($"[MQTT PUBLISH] Topic: home/music/playlists/list");
-            Debug.Log($"[MQTT PUBLISH] Payload: {json}");
+            string topic = "home/music/playlists/list";
+
+            _client.Publish(topic, Encoding.UTF8.GetBytes(json), MqttMsgBase.QOS_LEVEL_1, true);
+            Debug.Log($"[MQTT PUBLISHED] Topic: {topic}");
         }
         catch (System.Exception e)
         {
@@ -88,6 +112,14 @@ public class MQTTManager : MonoBehaviour
     {
         if (string.IsNullOrEmpty(str)) return "";
         return str.Replace("\"", "\\\"").Replace("\\", "\\\\").Replace("\n", "\\n");
+    }
+
+    void OnDestroy()
+    {
+        if (_client != null && _client.IsConnected)
+        {
+            _client.Disconnect();
+        }
     }
 
 }
