@@ -179,7 +179,7 @@ public class ModeController : MonoBehaviour
 
         if (_playlistController != null)
         {
-            _playlistController.OnItemSelected += OnPlaylistTrackSelected;
+            _playlistController.OnItemSelected += OnTrackSelected;
         }
 
         Debug.Log("ModeController subscribed to XRInputManager");
@@ -420,11 +420,6 @@ public class ModeController : MonoBehaviour
         }
     }
 
-    void OnPlaylistTrackSelected(int trackIndex)
-    {
-        // Not currently used - OnTrackSelected handles both modes
-    }
-
     void OnDestroy()
     {
         if (XRInputManager.Instance != null)
@@ -444,6 +439,6 @@ public class ModeController : MonoBehaviour
             _listController.OnItemSelected -= OnTrackSelected;
 
         if (_playlistController != null)
-            _playlistController.OnItemSelected -= OnPlaylistTrackSelected;
+            _playlistController.OnItemSelected -= OnTrackSelected;
     }
 }
