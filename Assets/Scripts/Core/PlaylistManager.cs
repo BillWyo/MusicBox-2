@@ -42,16 +42,29 @@ public class PlaylistManager : MonoBehaviour
 
     public void SavePlaylist(Playlist playlist)
     {
+        Debug.Log($"PlaylistManager.SavePlaylist called: {playlist?.Name}, useFiles={_usePlaylistFiles}");
+
         if (_usePlaylistFiles)
         {
-            PlaylistJsonSaver.SavePlaylist(playlist, _playlistPath);
+            Debug.Log($"Saving to file: {_playlistPath}");
+            bool saved = PlaylistJsonSaver.SavePlaylist(playlist, _playlistPath);
+            Debug.Log($"PlaylistJsonSaver returned: {saved}");
 
-            // Publish to Node-RED via MQTT
+            Debug.Log($"MQTTManager.Instance = {MQTTManager.Instance}");
             if (MQTTManager.Instance != null)
             {
+                Debug.Log($"Calling MQTTManager.PublishPlaylist...");
                 MQTTManager.Instance.PublishPlaylist(playlist);
                 Debug.Log($"Published playlist '{playlist.Name}' to Node-RED");
             }
+            else
+            {
+                Debug.LogError("MQTTManager.Instance is NULL!");
+            }
+        }
+        else
+        {
+            Debug.LogWarning("_usePlaylistFiles is false, not saving");
         }
     }
 

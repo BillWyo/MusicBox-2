@@ -71,4 +71,13 @@ public class EditablePlaylistDataSource : MonoBehaviour, IListDataSource
     {
         return null;
     }
+
+    public void SyncToPlaylist()
+    {
+        if (_playlist != null)
+        {
+            _playlist.Tracks = new List<Track>(_tracks);
+            Debug.Log($"Synced {_tracks.Count} tracks to playlist '{_playlist.Name}'");
+        }
+    }
 }

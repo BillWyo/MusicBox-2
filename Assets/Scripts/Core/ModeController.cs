@@ -386,6 +386,10 @@ public class ModeController : MonoBehaviour
         Debug.Log($"SaveCurrentPlaylist called: _currentEditingPlaylist={_currentEditingPlaylist?.Name}, PlaylistManager={PlaylistManager.Instance}");
         if (_currentEditingPlaylist != null && PlaylistManager.Instance != null)
         {
+            if (_editablePlaylistDataSource != null)
+            {
+                _editablePlaylistDataSource.SyncToPlaylist();
+            }
             PlaylistManager.Instance.SavePlaylist(_currentEditingPlaylist);
             Debug.Log($"Saved playlist: {_currentEditingPlaylist.Name}");
             ExitPanel();
