@@ -12,11 +12,13 @@ public class EditablePlaylistDataSource : MonoBehaviour, IListDataSource
 
     public void SetPlaylist(Playlist playlist)
     {
+        Debug.Log($"[EditablePlaylistDataSource.SetPlaylist] Setting playlist: name='{playlist?.Name}', tracks={playlist?.Tracks.Count ?? 0}");
         _playlist = playlist;
         if (playlist != null)
             _tracks = new List<Track>(playlist.Tracks);
         else
             _tracks.Clear();
+        Debug.Log($"[EditablePlaylistDataSource.SetPlaylist] After set: _tracks.Count={_tracks.Count}, about to fire OnDataChanged");
         OnDataChanged?.Invoke();
     }
 

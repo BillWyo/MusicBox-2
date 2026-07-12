@@ -244,6 +244,8 @@ public class ModeController : MonoBehaviour
         {
             // In Browse mode, create a fresh playlist with random generated name
             string playlistName = PlaylistNameGenerator.GenerateName();
+            Debug.Log($"[OnAlbumSelected] Generated playlist name: '{playlistName}'");
+
             _currentEditingPlaylist = new Playlist
             {
                 Name = playlistName,
@@ -251,16 +253,19 @@ public class ModeController : MonoBehaviour
             };
 
             // Set blank playlist first (triggers OnDataChanged)
+            Debug.Log($"[OnAlbumSelected] Setting blank playlist on EditablePlaylistDataSource, name='{_currentEditingPlaylist.Name}', tracks={_currentEditingPlaylist.Tracks.Count}");
             _editablePlaylistDataSource.SetPlaylist(_currentEditingPlaylist);
+            Debug.Log($"[OnAlbumSelected] After SetPlaylist: EditablePlaylistDataSource count={_editablePlaylistDataSource.Count}");
 
             // Then reset controller view to show empty state
             if (_playlistController != null)
             {
                 _playlistController.ResetView();
                 _playlistController.SetHeader(playlistName);
+                Debug.Log($"[OnAlbumSelected] Set header to: '{playlistName}'");
             }
 
-            Debug.Log($"Playlist panel showing: {playlistName}");
+            Debug.Log($"[OnAlbumSelected] Playlist panel showing: {playlistName}");
             _playlistPanel.SetActive(true);
         }
 
@@ -314,7 +319,7 @@ public class ModeController : MonoBehaviour
 
     void OnPlaylistSelected(int playlistIndex)
     {
-        Debug.Log($"OnPlaylistSelected called with index: {playlistIndex}");
+        Debug.Log($"[OnPlaylistSelected] Called with index: {playlistIndex}, CurrentMode={CurrentMode}");
 
         if (PlaylistManager.Instance == null)
         {
