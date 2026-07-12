@@ -63,6 +63,7 @@ public class RolodexController : MonoBehaviour
     {
         if (_dataSource is AlbumDataSource albumSource)
         {
+            albumSource.OnDataChanged += OnAlbumsLoaded;
             albumSource.OnDataChanged += RefreshTiles;
         }
         else if (_dataSource is PlaylistDataSource playlistSource)
@@ -83,6 +84,36 @@ public class RolodexController : MonoBehaviour
 
         if (_tiles == null && DataSource != null && DataSource.Count > 0)
             RefreshTiles();
+    }
+
+    void OnAlbumsLoaded()
+    {
+        if (_activeInMode == ModeController.Mode.Browse)
+            PreloadAllTextures();
+    }
+
+    void PreloadAllTextures()
+    {
+        if (DataSource == null) return;
+
+        AlbumDataSource albumSource = DataSource as AlbumDataSource;
+        if (albumSource == null) return;
+
+        int count = albumSource.Count;
+        int loaded = 0;
+        Debug.Log($"Preloading {count} album textures into memory...");
+
+        for (int i = 0; i < count; i++)
+        {
+            Album album = albumSource.GetAlbum(i);
+            if (album != null && !string.IsNullOrEmpty(album.ArtPath))
+            {
+                Texture2D tex = LoadTextureFromFile(album.ArtPath);
+                if (tex != null) loaded++;
+            }
+        }
+
+        Debug.Log($"Preload complete: {loaded}/{count} textures cached");
     }
 
     Texture2D LoadTextureFromFile(string filePath)

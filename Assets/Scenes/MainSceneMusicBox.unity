@@ -665,7 +665,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5a14bdd945841354b99e3f07481f03d6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ListInputHandler
-  _listController: {fileID: 1845143538}
+  _trackListController: {fileID: 0}
+  _playlistController: {fileID: 0}
 --- !u!1 &463760245
 GameObject:
   m_ObjectHideFlags: 0
@@ -1508,7 +1509,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cdcc801495f379e41a1ee1b31593d549, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlaylistManager
-  _usePlaylistFiles: 0
+  _usePlaylistFiles: 1
   _playlistPath: \\HIS-BASE\Music-FlacPlaylists
 --- !u!4 &1600934984
 Transform:
