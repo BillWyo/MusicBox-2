@@ -22,6 +22,7 @@ public class XRInputManager : MonoBehaviour
     private bool _wasLeftContextPressed;
     private bool _wasRightContextPressed;
     private Vector2 _lastJoystickValue;
+    private int _joystickDirectionAtPress;
 
     // Joystick press tracking for tap vs hold
     private bool _joystickPressed;
@@ -80,12 +81,13 @@ public class XRInputManager : MonoBehaviour
         {
             _joystickPressed = true;
             _joystickPressStartTime = Time.time;
+            _joystickDirectionAtPress = joystickDirection;
         }
         else if (!joystickXPressed && _joystickPressed)
         {
             _joystickPressed = false;
             float pressDuration = Time.time - _joystickPressStartTime;
-            int direction = keyboard.aKey.isPressed ? -1 : 1;
+            int direction = _joystickDirectionAtPress;
 
             if (pressDuration < TAP_DURATION_THRESHOLD)
             {
@@ -168,12 +170,13 @@ public class XRInputManager : MonoBehaviour
             {
                 _joystickPressed = true;
                 _joystickPressStartTime = Time.time;
+                _joystickDirectionAtPress = joystickDirection;
             }
             else if (!joystickXPressed && _joystickPressed)
             {
                 _joystickPressed = false;
                 float pressDuration = Time.time - _joystickPressStartTime;
-                int direction = joystickDirection;
+                int direction = _joystickDirectionAtPress;
 
                 if (pressDuration < TAP_DURATION_THRESHOLD)
                 {
