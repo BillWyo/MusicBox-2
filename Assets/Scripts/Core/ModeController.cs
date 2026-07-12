@@ -207,6 +207,12 @@ public class ModeController : MonoBehaviour
         Album selectedAlbum = albums[albumIndex];
         Debug.Log($"Selected album: {selectedAlbum.Title}, tracks: {selectedAlbum.Tracks.Count}");
 
+        // Reset list view to clear old items before setting new album
+        if (_listController != null)
+        {
+            _listController.ResetView();
+        }
+
         if (_trackListDataSource != null)
         {
             Debug.Log("Setting album on TrackListDataSource");
