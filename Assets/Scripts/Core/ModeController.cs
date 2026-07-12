@@ -242,6 +242,10 @@ public class ModeController : MonoBehaviour
         // Show playlist panel with new generated playlist for Browse mode
         if (_playlistPanel != null && _editablePlaylistDataSource != null)
         {
+            // Clear any stale data from previous playlist
+            Debug.Log($"[OnAlbumSelected] Clearing previous playlist data");
+            _editablePlaylistDataSource.Clear();
+
             // In Browse mode, create a fresh playlist with random generated name
             string playlistName = PlaylistNameGenerator.GenerateName();
             Debug.Log($"[OnAlbumSelected] Generated playlist name: '{playlistName}'");
