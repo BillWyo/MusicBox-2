@@ -173,7 +173,7 @@ public class XRInputManager : MonoBehaviour
             {
                 _joystickPressed = false;
                 float pressDuration = Time.time - _joystickPressStartTime;
-                int direction = leftJoystickValue.x < -0.5f ? -1 : 1;
+                int direction = joystickDirection;
 
                 if (pressDuration < TAP_DURATION_THRESHOLD)
                 {

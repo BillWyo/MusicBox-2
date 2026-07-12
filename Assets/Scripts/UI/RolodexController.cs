@@ -309,15 +309,13 @@ public class RolodexController : MonoBehaviour
     {
         if (!gameObject.activeSelf || ModeController.Instance.CurrentMode != _activeInMode) return;
         if (DataSource == null) return;
-        if (Time.time - _lastScrollTime < _scrollCooldown) return;
 
         int count = DataSource.Count;
         if (count == 0) return;
 
-        // Rapid scroll on hold: advance 3 items per hold event
+        // Rapid scroll on hold: advance 3 items per hold event (continuous acceleration, no cooldown)
         int rapidAdvance = direction * 3;
         _offset = (_offset + rapidAdvance + count * 10) % count;
-        _lastScrollTime = Time.time;
         RefreshTiles();
         OnIndexChanged?.Invoke(CurrentIndex, count);
     }
