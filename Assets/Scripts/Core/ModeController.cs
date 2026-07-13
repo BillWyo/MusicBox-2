@@ -393,8 +393,24 @@ public class ModeController : MonoBehaviour
         _currentEditingPlaylist = null;
         _isCreating = false;
         _isEditing = false;
+        ResetBlankPlaylistCard();
         UpdateUIVisibility(CurrentMode);
         Debug.Log("Exited Create/Edit mode");
+    }
+
+    void ResetBlankPlaylistCard()
+    {
+        if (_editablePlaylistDataSource != null)
+        {
+            _editablePlaylistDataSource.Clear();
+            Playlist blankPlaylist = new Playlist
+            {
+                Name = "new playlist",
+                Tracks = new List<Track>()
+            };
+            _editablePlaylistDataSource.SetPlaylist(blankPlaylist);
+            Debug.Log("[ResetBlankPlaylistCard] Created fresh blank 'new playlist' card");
+        }
     }
 
     void SaveCurrentPlaylist()
