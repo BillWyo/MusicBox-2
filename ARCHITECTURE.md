@@ -92,78 +92,112 @@ AlbumRolodex: Populate when discovery complete
 PlaylsitRolodex: Populate when playlist load complete
 ```
 
-### 2. Browse Mode → Create (Album Selection & Track Selection)
+### 2a. Browse Mode → Create via N Key (New Playlist)
 ```
-User: Left Joystick X (scroll albums), Right Trigger to select
+User: Press N key (in Browse mode)
   ↓
-Album selected
+Auto-generate playlist name (random bird name)
   ↓
 AlbumRolodex + PlaylistRolodex fade to background
   ↓
 Layout: Side-by-side cards appear front/center
   ┌─────────────────────┐  ┌──────────────────┐
   │   ListPanel (left)  │  │ Playlist Card    │
-  │  Album's tracks:    │  │ (right - target) │
-  │  ☐ Track 1          │  │ Blank or Exist   │
+  │  Album's tracks:    │  │ (right - NEW)    │
+  │  ☐ Track 1          │  │ [Auto-named]     │
   │  ☐ Track 2          │  │ Tracks added: 0  │
   │  ☐ Track 3          │  │                  │
   └─────────────────────┘  └──────────────────┘
   ↓
-User: Right Joystick Y (scroll tracks), Right Trigger to select each track
-  → Track highlights in ListPanel
+User: Right Joystick Y (scroll tracks), Right Trigger to add each track
+  → Track highlights in ListPanel (center row, yellow)
   → Selected tracks accumulate in Playlist Card (real-time feedback)
   → Counter updates: "Tracks added: 2"
   ↓
 When done selecting tracks:
-  → User can scroll PlaylistRolodex with Left Joystick X to pick target
-  → Blank Card centered = create new playlist
-  → Existing Playlist centered = append to that playlist
+  → X key (Save) to commit playlist to disk
+  → PlaylistManager.SavePlaylist(newPlaylist)
+  → MQTT: Publish "playlist.created"
+  → Both cards fade out, PlaylistPanel resets to blank
+  ↓
+Right A button (Back) to cancel:
+  → Discard unsaved tracks
+  → Both cards fade out
+  → Unsaved playlist is NOT discarded (persists in EditablePlaylistDataSource)
+  ↓
+Return to Browse mode: AlbumRolodex comes forward
+  → Can select different album and continue adding to same unsaved playlist
+  → Can press N again to start fresh blank playlist
+```
+
+### 2b. Browse Mode → Create via Existing Playlist Selection
+```
+User: Left Joystick X (scroll albums), Right Trigger to select album
+  ↓
+Album selected → AlbumRolodex + PlaylistRolodex fade to background
+  ↓
+Layout: Side-by-side cards appear front/center
+  ┌─────────────────────┐  ┌──────────────────┐
+  │   ListPanel (left)  │  │ Playlist Card    │
+  │  Album's tracks:    │  │ (right - EXIST)  │
+  │  ☐ Track 1          │  │ [Selected name]  │
+  │  ☐ Track 2          │  │ Tracks: 5        │
+  │  ☐ Track 3          │  │                  │
+  └─────────────────────┘  └──────────────────┘
+  ↓
+User: Right Joystick Y (scroll tracks), Right Trigger to add selected track
+  → Right Trigger adds track to existing playlist (no duplicates)
+  → Selected tracks accumulate in Playlist Card
+  → Track count updates
   ↓
 Left X button (Save) to commit:
-  → PlaylistManager.SavePlaylist() (new or updated)
-  → MQTT: Publish "playlist.created" or "playlist.modified"
+  → PlaylistManager.SavePlaylist(updatedPlaylist)
+  → MQTT: Publish "playlist.modified"
   → Both cards fade out
   ↓
 Right A button (Back) to cancel:
-  → Discard selected tracks
+  → Discard pending additions
+  → Existing playlist unchanged
   → Both cards fade out
   ↓
-Return to Browse mode: AlbumRolodex + PlaylistRolodex come forward
+Return to Browse mode: AlbumRolodex comes forward
 ```
 
 ### 3. Browse Mode → Review (Toggle mode)
 ```
-User: Left Trigger
+User: Left Trigger (or Spacebar)
   ↓
 ModeController: Toggle Browse → Review
   ↓
-AlbumRolodex + PlaylistRolodex fade/move to background
+AlbumRolodex fades to background
   ↓
 PlaylistRolodex comes forward (focused)
-  Shows: [BLANK CARD] [Playlist 1] [Playlist 2] ...
-  Note: Blank card present for creating new playlists in Review mode
+  Shows: [Playlist 1] [Playlist 2] [Playlist 3] ...
+  Note: ONLY saved playlists (no blank card)
+  To create new: return to Browse, press N key
   ↓
 User: Left Joystick X (scroll playlists), Right Trigger to select
   ↓
-Playlist selected
-  ↓
-PlaylistRolodex fades to background
+Playlist selected → PlaylistRolodex fades to background
   ↓
 ListPanel (track edit card) comes forward (centered)
   Shows: Playlist's tracklist (with delete capability)
   ┌────────────────────────┐
-  │  "My Playlist"         │
-  │  ☑ Track 1 (deletable) │
-  │  ☑ Track 2 (deletable) │
-  │  ☑ Track 3 (deletable) │
+  │  "My Playlist" (5)     │
+  │  ☑ Track 1 (delete)    │
+  │  ☑ Track 2 (delete)    │
+  │  ☑ Track 3 (delete)    │
   └────────────────────────┘
   ↓
 User: Right Joystick Y (scroll tracks), Right Trigger to delete selected track
   → Track removed from playlist
-  → PlaylistManager.SavePlaylist() immediately
+  → ListController re-centers selection on next track
+  → If last track deleted: ListPanel closes, return to PlaylistRolodex
+  → PlaylistManager.SavePlaylist() immediately (auto-save on delete)
   → MQTT: Publish "playlist.modified"
   ↓
-Left X button to save (confirm changes), Right A button to close ListPanel
+Left X button to confirm deletions (or just closes ListPanel)
+Right A button to close ListPanel (discards unsaved changes if any)
   ↓
 ListPanel fades out
   ↓
@@ -242,13 +276,14 @@ Front (Focused):  ┌─────────────┐  ┌────
 Back (Faded):     AlbumRolodex + PlaylistRolodex (50% alpha)
 ```
 
-**Browse → Album Selected → Playlist Selection:**
+**Browse → Album Selected → Choose Target (older flow, now via N key):**
 ```
-Front (Focused):  PlaylistRolodex (carousel, pick target)
+Front (Focused):  PlaylistRolodex (carousel, pick target) [DEPRECATED]
                   ↓ (Left Joystick X to scroll)
-                  ├─ Blank Card centered = create new
                   └─ Existing Playlist centered = append
 Back (Faded):     ListPanel + AlbumRolodex (25% alpha)
+
+NEW (N key): Press N to create blank instead of browsing carousel
 ```
 
 **Browse → Album Selected → Save/Cancel:**
@@ -264,6 +299,7 @@ Return to Browse: AlbumRolodex (front), PlaylistRolodex (back)
 **Review Mode (Default State):**
 ```
 Front (Focused):  PlaylistRolodex (opaque, interactive)
+                  Shows: ONLY saved playlists (no blank card)
                   AlbumRolodex (hidden)
 Back (Hidden):    ListPanel (inactive)
 ```
@@ -292,23 +328,162 @@ Return to Review: PlaylistRolodex (front)
 
 ---
 
+## List Panel Operations
+
+### Panel Types
+
+**PlaylistPanel (Editable Playlist):**
+- Shows currently-editing playlist
+- Displays: Playlist name (title), track count, 6 visible tracks
+- Each track shows: Track# | Title | Artist | Album
+- Selection model: One track always highlighted (center row, yellow/bright)
+- Operations: addTrack, deleteTrack, moveTrackUp, moveTrackDown
+
+**AlbumListPanel (Browse Mode Tracks):**
+- Shows selected album's track list (read-only for browsing)
+- Displays: Album name (title), track count, 6 visible tracks
+- Each track shows: Track# | Title | Artist
+- Selection model: One track always highlighted (center row, yellow/bright)
+- Operations: addTrack (to playlist), no delete in browse mode
+
+### List Operations
+
+**addTrack(track) — Append Track**
+- Adds track to end of list if not already present
+- If track already in list: no duplicate, list unchanged
+- After add: newly-added track becomes selectedItem
+- Feedback: Track count updates, list scrolls to show new track if needed
+
+**deleteTrack(itemIndex) — Remove Track**
+- Removes track at itemIndex from list
+- Remaining tracks shift up (move up one position)
+- After delete: 
+  - If deleted item was NOT last: selectedItem = item at same index in shortened list
+  - If deleted item WAS last: selectedItem = new last item in list
+- If list becomes empty after deletion: ListPanel closes, return to rolodex
+- Feedback: Track count updates, selection re-centered
+
+**moveTrackUp(itemIndex) — Reorder**
+- Moves track at itemIndex up one position (swap with itemIndex-1)
+- Fails silently if itemIndex == 0 (already at top)
+- After move: movedTrack remains selectedItem
+- Feedback: Visual reflow of list items
+
+**moveTrackDown(itemIndex) — Reorder**
+- Moves track at itemIndex down one position (swap with itemIndex+1)
+- Fails silently if itemIndex == last (already at bottom)
+- After move: movedTrack remains selectedItem
+- Feedback: Visual reflow of list items
+
+### Selection Model
+
+**SelectedItem (Within a ListPanel):**
+- The currently-highlighted track (center row, yellow/bright color)
+- Always exactly one selected item when list is open
+- Updated after every operation: add, delete, moveUp, moveDown
+- Scroll with Right Joystick Y (up/down) to change selection
+- Press Right Trigger to perform action (add/delete/confirm)
+
+**SelectedAlbum (Browse Mode Carousel):**
+- The centered album tile in AlbumRolodex
+- Updated when Left Joystick X scrolls carousel
+- Press Right Trigger to select → shows album tracks in ListPanel
+
+**SelectedPlaylist (Review Mode Carousel):**
+- The centered playlist tile in PlaylistRolodex
+- Updated when Left Joystick X scrolls carousel
+- Press Right Trigger to select → shows playlist tracks in ListPanel (edit mode)
+
+### Unsaved Playlist Persistence
+
+**Key Rule:** A playlist that has tracks added but NOT saved persists across album selections.
+
+**Workflow:**
+1. User in Browse mode, selects Album A → shows AlbumListPanel (read-only) + PlaylistPanel (blank)
+2. User adds tracks from Album A → PlaylistPanel now shows 3 tracks (not saved yet)
+3. User presses B (back) → returns to Browse mode, tracks still in memory
+4. User selects Album B → shows AlbumListPanel (Album B tracks) + PlaylistPanel (still shows Album A's 3 tracks!)
+5. User can continue adding tracks from Album B to same playlist
+6. When user saves (X button) → playlist is written to disk
+7. After save → PlaylistPanel resets to blank "new playlist" for next creation
+
+**Benefit:** Users can build cross-album playlists without saving between each album selection.
+
+**Limitation:** If user doesn't save before quitting → unsaved playlist is lost.
+
+### N-Key Workflow (Complete Flow)
+
+```
+Browse Mode (AlbumRolodex centered)
+  ↓
+Press N Key
+  ↓
+Generate random bird name: "Wren's Mix"
+  ↓
+Fade AlbumRolodex to background (50% alpha)
+  ↓
+Show side-by-side:
+  ┌─────────────────────┐  ┌──────────────────┐
+  │   AlbumListPanel    │  │  PlaylistPanel   │
+  │  (current album)    │  │ [Wren's Mix]     │
+  │  Tracks: 0/8        │  │ Tracks: 0        │
+  │                     │  │                  │
+  │  ☑ Track 1          │  │                  │
+  │  ☐ Track 2 (sel)    │  │                  │
+  │  ☐ Track 3          │  │                  │
+  └─────────────────────┘  └──────────────────┘
+  ↓
+User adds tracks (Right Trigger on AlbumListPanel)
+  │ Track 2 → PlaylistPanel (added)
+  │ Scroll to Track 5
+  │ Track 5 → PlaylistPanel (added)
+  ↓
+PlaylistPanel now shows:
+  Wren's Mix
+  Tracks: 2
+  ☑ Track 2
+  ☑ Track 5
+  ↓
+User Press X (Save)
+  │ PlaylistManager.SavePlaylist("Wren's Mix", [Track2, Track5])
+  │ MQTT.Publish("playlist.created", ...)
+  │ Both panels fade out
+  ↓
+PlaylistPanel resets to blank, ready for next N press
+  ↓
+Return to Browse: AlbumRolodex comes forward
+  ↓
+User can:
+  • Press N again for new blank playlist
+  • Select different album (or same album) and press N
+  • Press Enter to add to EXISTING saved playlist
+  • Press Spacebar to switch to Review mode
+```
+
+---
+
 ## Playlist Concept
 
-**Blank Card (Create New):**
-- Always appears as first card in PlaylistRolodex
-- In Browse mode: available for creating new playlists during track selection
-- In Review mode: available for creating new playlists on-the-fly
-- Display: `[+ NEW PLAYLIST]` or similar
-- When centered + Right Trigger: auto-generate name (random bird name), create with selected tracks
+**Creating New Playlists:**
+- In Browse mode: Press "N" key → blank playlist opens (auto-generated bird name)
+- In Review mode: NOT available (Review is edit-only mode)
+- Blank playlists do NOT appear in PlaylistRolodex (use N key instead)
+- Once playlist has ≥ 1 track: user can save (X button) or discard (B button)
 
-**Existing Playlists:**
-- Appear as carousel tiles after blank card
-- In Browse: can append selected tracks to any existing playlist
-- In Review: can view/edit existing playlist (delete tracks, rename)
+**Existing Playlists (in PlaylistRolodex):**
+- Appear as carousel tiles (in order of load from disk)
+- In Browse mode: can append selected tracks to any existing playlist
+- In Review mode: can view/edit existing playlist (delete tracks, rename)
+
+**No Blank Card Policy:**
+- PlaylistRolodex contains ONLY saved playlists (no dummy "create new" card)
+- To create new playlist in Browse: Use N key
+- To create new playlist in Review: Not possible (go to Browse, use N key)
 
 **Logic:**
-- If blank card centered when Right Trigger pressed → **Create mode**
-- If existing playlist centered when Right Trigger pressed → **Append/Edit mode**
+- Right Trigger on playlist in Browse → Enter Create mode, append tracks
+- Right Trigger on playlist in Review → Enter Edit mode, delete/reorder tracks
+- N key in Browse → Create mode with fresh blank playlist
 
 ---
 
@@ -342,61 +517,97 @@ Return to Review: PlaylistRolodex (front)
 | Left Trigger | Spacebar | Toggle Browse ↔ Review |
 | Left Joystick X (left) | A | Scroll carousel/list left |
 | Left Joystick X (right) | D | Scroll carousel/list right |
-| Left X button | ? | Save (playlist, changes) |
-| Left Y button | ? | Album Context Menu (sort, filter) |
+| Left X button | X | Save (playlist, changes) |
+| Left Y button | Y | Album Context Menu (sort, filter) |
 | Right Trigger | Enter | Select album/playlist/track |
 | Right Joystick Y (up) | W | Scroll track list up |
 | Right Joystick Y (down) | S | Scroll track list down |
-| Right A button | ? | Back / Close panel |
-| Right B button | ? | Playlist Context Menu (delete, reorder) |
+| Right A button | B | Back / Close panel |
+| Right B button | Backspace | Playlist Context Menu (delete, reorder) |
+| **N Key (Browse only)** | **N** | **Create blank playlist (new workflow)** |
 
-**TODO:** Assign keyboard keys for Left X, Right A, Left Y, Right B buttons
+**New in v2:** N key creates fresh blank playlist in Browse mode (no blank card in PlaylistRolodex)
 
 ---
 
 ## Mode State Machine
 
 ```
-┌─────────────────────────────────────────────────────┐
-│                   ModeController                     │
-│           (Toggled by Left Trigger)                  │
-└─────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────┐
+│                      ModeController                              │
+│              (Toggled by Left Trigger / Spacebar)                │
+└─────────────────────────────────────────────────────────────────┘
 
 Browse (Default)
 ├─ Shows: AlbumRolodex (lower), NavigationUI ("BROWSE ALBUMS")
 ├─ Input: Left Joystick X (scroll albums), Right Trigger (select album)
-│         Left Trigger (mode toggle)
+│         N Key (create blank playlist)
+│         Left Trigger (mode toggle to Review)
 ├─ OnEnter: 
 │   - AlbumRolodex visible
 │   - PlaylistRolodex hidden
 │   - ListPanel hidden
 │   - ModeText = "BROWSE ALBUMS"
+│   - Restore unsaved playlist if it exists
 └─ OnExit: Close ListPanel if open (before mode switch)
+
+Browse → Create (Album Selected)
+├─ Shows: AlbumListPanel (left, track list) + PlaylistPanel (right, target)
+├─ Input: Right Joystick Y (scroll tracks), Right Trigger (add selected track)
+│         Left Joystick X (scroll PlaylistRolodex at background)
+│         X Key (save playlist), B Key (back to Browse)
+├─ Behavior:
+│   - Album tracks shown on left (read-only list)
+│   - Target playlist shown on right (can be existing or new)
+│   - Selected track in AlbumListPanel highlighted (yellow)
+│   - Right Trigger adds selected track to PlaylistPanel
+│   - Unsaved playlist persists when user presses B
+│   - X Key saves playlist and resets to blank for next creation
+└─ Return to Browse: Pressing B returns to AlbumRolodex (unsaved tracks preserved)
+
+Browse → Create via N Key
+├─ Shows: AlbumListPanel (left) + Blank PlaylistPanel (right, auto-named)
+├─ Behavior:
+│   - N key opens blank playlist with auto-generated bird name
+│   - User can add tracks from currently-selected or nearby albums
+│   - Same save/back flow as standard Create mode
+└─ Return to Browse: Same as above
 
 Review (Toggled via Left Trigger)
 ├─ Shows: PlaylistRolodex (upper), NavigationUI ("REVIEW PLAYLISTS")
 ├─ Input: Left Joystick X (scroll playlists), Right Trigger (select playlist)
-│         Left Trigger (mode toggle)
-│         Right Joystick Y + Right Trigger (when ListPanel expanded)
+│         Left Trigger (mode toggle to Browse)
 ├─ OnEnter:
-│   - PlaylistRolodex visible
+│   - PlaylistRolodex visible (contains ONLY saved playlists, NO blank card)
 │   - AlbumRolodex hidden
 │   - ListPanel hidden (expands on playlist select)
 │   - ModeText = "REVIEW PLAYLISTS"
-│   - Refresh playlists from PlaylistManager
-└─ OnExit: Close ListPanel if open, save any pending changes
-```
+│   - Refresh playlists from PlaylistManager (discard unsaved edits)
+└─ OnExit: Close ListPanel if open, save any pending deletions
 
-**Create Mode (Embedded in Browse):**
-- When album selected in Browse mode → ListPanel expands with TrackList (add-to-playlist)
-- B button to save and collapse ListPanel → return to Browse AlbumRolodex
-- Still in Browse mode, just ListPanel open
+Review → Edit (Playlist Selected)
+├─ Shows: PlaylistPanel (edit mode, center screen)
+├─ Input: Right Joystick Y (scroll tracks), Right Trigger (delete selected track)
+│         X Key (save changes), B Key (close without saving)
+├─ Behavior:
+│   - Playlist tracks shown as editable list
+│   - Selected track highlighted (yellow)
+│   - Right Trigger DELETES selected track
+│   - Tracks automatically shift up after deletion
+│   - If last track deleted → playlist closes, return to PlaylistRolodex
+│   - X Key confirms deletions, B Key discards changes
+└─ Return to Review: Pressing B returns to PlaylistRolodex
 
-**State Safety:**
+State Safety:
 - Only Browse or Review active at a time
 - Mode switch via left trigger only (no accidental UI clicks)
 - ListPanel visibility independent of mode (can appear/disappear in either)
 - Input handler respects current mode and ListPanel visibility
+- Unsaved playlists in Browse mode persist across album selections
+- Saved playlists in Review mode do not persist unsaved edits (reload on mode enter)
+```
+
+---
 
 ---
 
@@ -470,13 +681,16 @@ Load:      Album art from network (cached locally)
 ### 2. PlaylistRolodex (Review Mode)
 ```
 Displays:  6 visible tiles in arc (center = selected)
+Contents:  ONLY saved playlists (no blank card)
 Scroll:    Left Joystick X-axis (blocked when TrackList open)
-Interaction: Right Trigger to select
+Interaction: Right Trigger to select → show tracks in edit mode
 Behavior:  Show track list when Right Trigger pressed
-Load:      Trigger ListController.Show()
+Load:      Trigger ListController.Show() with edit mode enabled
+Note:      To create new playlist, return to Browse and press N key
 ```
 
 **v1 Fix Applied:** Input blocking prevents playlist rotation while viewing tracks
+**v2 Update:** Blank card removed; use N key in Browse mode for new playlists
 
 ### 3. ListController (Track Selection & Track List)
 
