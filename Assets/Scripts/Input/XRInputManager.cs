@@ -9,6 +9,7 @@ public class XRInputManager : MonoBehaviour
     public event System.Action OnRightTriggerPressed;     // Enter: Select item
     public event System.Action OnBackPressed;             // B key: Back/Close
     public event System.Action OnXButtonPressed;          // X key: Save (Left Primary)
+    public event System.Action OnNKeyPressed;             // N key: Create blank playlist (Browse only)
     public event System.Action OnLeftContextMenu;         // Left Secondary (Y) - TODO
     public event System.Action OnRightContextMenu;        // Right Secondary (B) - TODO
     public event System.Action<Vector2> OnJoystickMoved;
@@ -19,6 +20,7 @@ public class XRInputManager : MonoBehaviour
     private bool _wasRightTriggerPressed;
     private bool _wasBackPressed;
     private bool _wasXButtonPressed;
+    private bool _wasNKeyPressed;
     private bool _wasLeftContextPressed;
     private bool _wasRightContextPressed;
     private Vector2 _lastJoystickValue;
@@ -125,6 +127,13 @@ public class XRInputManager : MonoBehaviour
         {
             Debug.Log("Left X button pressed (Save)");
             OnXButtonPressed?.Invoke();
+        }
+
+        // N Key - Create blank playlist (Browse mode only)
+        if (keyboard.nKey.wasPressedThisFrame)
+        {
+            Debug.Log("N key pressed (Create blank playlist)");
+            OnNKeyPressed?.Invoke();
         }
 
         // Right Secondary (Backspace) - Context menu
